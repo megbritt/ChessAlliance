@@ -1,0 +1,10 @@
+{
+  "watch": [
+    ".env",
+    "server/",
+    "webpack.config.js"
+  ],
+  "ignore": [
+    "server/public/"
+  ]
+}
