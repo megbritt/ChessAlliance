@@ -52,6 +52,7 @@ a:hover {
 .avatar {
   height: 44px;
   width: 44px;
+  background-color: transparent;
 }
 
 .nav-background {
@@ -160,7 +161,7 @@ a:hover {
 }
 
 .side-select.selected {
-  border: 3px solid #0173fa;
+  border: 5px solid #956a43;
 }
 
 .post-message-div {
