@@ -21,7 +21,8 @@ app.use(staticMiddleware);
 app.get('/api/games', (req, res, next) => {
   const sql = `
   select *
-  from "games"
+    from "games"
+  where "opponentName" is null
   `;
 
   db.query(sql)
@@ -34,6 +35,7 @@ app.get('/api/games', (req, res, next) => {
 app.get('/api/games/:gameId', (req, res, next) => {
   const gameId = req.params.gameId;
   const gameIdInt = parseInt(gameId);
+
   if (!Number.isInteger(gameIdInt)) {
     throw new ClientError(400, `${gameId} is not a valid gameId`);
   }
@@ -47,7 +49,7 @@ app.get('/api/games/:gameId', (req, res, next) => {
   db.query(sql, params)
     .then(result => {
       if (result.rows.length === 0) {
-        throw new ClientError(404, 'no such gameId exists');
+        throw new ClientError(404, 'gameId does not exist');
       }
       res.json(result.rows[0]);
     })
@@ -65,7 +67,9 @@ app.post('/api/games', (req, res, next) => {
   values ($1, $2, $3)
   returning *
   `;
+
   const params = [playerName, playerSide, message];
+
   db.query(sql, params)
     .then(result => {
       res.json(result.rows[0]);
@@ -76,6 +80,7 @@ app.post('/api/games', (req, res, next) => {
 app.delete('/api/games/:gameId', (req, res, next) => {
   const gameId = req.params.gameId;
   const gameIdInt = parseInt(gameId);
+
   if (!Number.isInteger(gameIdInt)) {
     throw new ClientError(400, `${gameId} is not a valid gameId`);
   }
@@ -85,7 +90,9 @@ app.delete('/api/games/:gameId', (req, res, next) => {
         where "gameId" = $1
   returning *
   `;
+
   const params = [gameId];
+
   db.query(sql, params)
     .then(result => {
       if (result.rows.length === 0) {
@@ -99,6 +106,5 @@ app.delete('/api/games/:gameId', (req, res, next) => {
 app.use(errorMiddleware);
 
 app.listen(process.env.PORT, () => {
-  // eslint-disable-next-line no-console
-  console.log(`express server listening on port ${process.env.PORT}`);
+  console.log(`Express server listening on port ${process.env.PORT}`);
 });
