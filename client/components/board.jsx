@@ -4,7 +4,7 @@ import Coords from '../lib/coords';
 const coords = new Coords();
 
 export default function Board(props) {
-  const { board } = props;
+  const { board, side } = props;
   const rows = [];
   let row = [];
   for (const coord of coords) {
@@ -15,28 +15,36 @@ export default function Board(props) {
     }
   }
 
-  const squares = rows.map((row, index) =>
-    <div key={index} className="board-row d-flex">
-      {row.map(coord => {
-        const square = board[coord];
-        let piece;
-        if (square.piece) {
-          const { player: side, piece: type } = square;
-          const src = `/images/${side + '-' + type}.png`;
-          piece = <img src={src} className="chess-piece" />;
-        }
+  const squares = rows.map((row, index) => {
+    const rowClass = side === 'white'
+      ? 'board-row d-flex'
+      : 'board-row d-flex flex-row-reverse';
+    return (
+      <div key={index} className={rowClass}>
+        {row.map(coord => {
+          const square = board[coord];
+          let piece;
+          if (square.piece) {
+            const { player: side, piece: type } = square;
+            const src = `/images/${side + '-' + type}.png`;
+            piece = <img src={src} className="chess-piece" />;
+          }
 
-        return (
-          <div key={coord} className="square" id={coord}>
-            {piece}
-          </div>
-        );
-      })}
-    </div>
-  );
+          return (
+            <div key={coord} className="square" id={coord}>
+              {piece}
+            </div>
+          );
+        })}
+      </div>
+    );
+  });
 
+  const boardClass = side === 'white'
+    ? 'board d-flex flex-column-reverse'
+    : 'board d-flex flex-column';
   return (
-    <div className="board d-flex flex-column-reverse">
+    <div className={boardClass}>
       {squares}
     </div>
   );
