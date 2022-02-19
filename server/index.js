@@ -1,5 +1,8 @@
 require('dotenv/config');
 const express = require('express');
+const pg = require('pg');
+const http = require('http');
+const { Server } = require('socket.io');
 const errorMiddleware = require('./error-middleware');
 const staticMiddleware = require('./static-middleware');
 const ClientError = require('./client-error');
@@ -13,6 +16,12 @@ const db = new pg.Pool({
 });
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+io.on('connection', socket => {
+});
+
 
 app.use(express.json());
 
