@@ -22,6 +22,11 @@ io.on('connection', socket => {
   socket.on('join lobby', () => {
     socket.join('lobby');
   });
+
+  socket.on('game joined', () => {
+    io.to('lobby').emit('game joined');
+  });
+
 });
 
 app.use(express.json());
