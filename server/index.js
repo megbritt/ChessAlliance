@@ -6,7 +6,6 @@ const { Server } = require('socket.io');
 const errorMiddleware = require('./error-middleware');
 const staticMiddleware = require('./static-middleware');
 const ClientError = require('./client-error');
-const pg = require('pg');
 
 const db = new pg.Pool({
   connectionString: process.env.DATABASE_URL,
@@ -20,8 +19,10 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 io.on('connection', socket => {
+  socket.on('join lobby', () => {
+    socket.join('lobby');
+  });
 });
-
 
 app.use(express.json());
 
