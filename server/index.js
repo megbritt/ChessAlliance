@@ -77,6 +77,34 @@ app.post('/api/games', (req, res, next) => {
     .catch(err => next(err));
 });
 
+app.put('/api/games/:gameId', (req, res, next) => {
+  const { opponentName } = req.body;
+  if (!opponentName) {
+    throw new ClientError(400, 'missing required field');
+  }
+  const gameId = req.params.gameId;
+  const gameIdInt = parseInt(gameId);
+  if (!Number.isInteger(gameIdInt)) {
+    throw new ClientError(400, `${gameId} is not a valid gameId`);
+  }
+
+  const sql = `
+  insert into "games" ("opponentName")
+  values ($2)
+   where "gameId" = $1
+  returning *
+  `;
+  const params = [gameId, opponentName];
+  db.query(sql, params)
+    .then(result => {
+      if (result.rows.length === 0) {
+        throw new ClientError(404, 'gameId does not exist');
+      }
+      res.json(result.rows[0]);
+    })
+    .catch(err => next(err));
+});
+
 app.delete('/api/games/:gameId', (req, res, next) => {
   const gameId = req.params.gameId;
   const gameIdInt = parseInt(gameId);
