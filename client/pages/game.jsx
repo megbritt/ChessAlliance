@@ -1,4 +1,5 @@
 import React from 'react';
+import { io } from 'socket.io-client';
 import ReactBoard from '../components/board';
 import PlayerPalette from '../components/player-palette';
 import Board from '../lib/board';
@@ -11,7 +12,9 @@ export default class Game extends React.Component {
     this.state = {
       board: new Board(),
       gamestate: new GameState(),
-      meta: null
+      meta: null,
+      side: null,
+      socket: io()
     };
     this.cancelGame = this.cancelGame.bind(this);
   }
@@ -22,8 +25,16 @@ export default class Game extends React.Component {
     fetch(`/api/games/${gameId}`)
       .then(res => res.json())
       .then(result => {
+        const { socket } = this.state;
+
         this.setState({ meta: result });
+
+        socket.emit('join room', this.state.meta.gameId);
       });
+  }
+
+  componentWillUnmount() {
+    this.state.socket.disconnect();
   }
 
   cancelGame() {
@@ -47,14 +58,20 @@ export default class Game extends React.Component {
       side: 'white'
     };
 
-    const player = meta
-      ? { username: meta.playerName, side: meta.playerSide }
-      : dummy;
+    let player = dummy;
+    let opponent = null;
+
+    if (meta) {
+      player = { username: meta.playerName, side: meta.playerSide };
+      if (meta.opponentName) {
+        opponent = { username: meta.opponentName, side: meta.opponentSide };
+      }
+    }
 
     return (
       <div className="game page-height mx-auto">
         <div className="w-100 d-block d-md-none p-2">
-          <PlayerPalette player={null} cancelAction={this.cancelGame} />
+          <PlayerPalette player={opponent} cancelAction={this.cancelGame} />
         </div>
 
         <div className="w-100 row">
@@ -70,7 +87,7 @@ export default class Game extends React.Component {
               <PlayerPalette player={null} cancelAction={this.cancelGame} />
             </div>
             <div className="w-100 p-2">
-              <PlayerPalette player={player} />
+              <PlayerPalette player={opponent} />
             </div>
           </div>
         </div>
