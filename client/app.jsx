@@ -6,6 +6,7 @@ import JoinGame from './pages/join-game';
 import parseRoute from './lib/parse-route';
 import PostForm from './pages/post-form';
 import Game from './pages/game';
+import RouteContext from '.lib/route-context';
 
 export default class App extends React.Component {
   constructor(props) {
@@ -51,11 +52,13 @@ export default class App extends React.Component {
     const { navBarShowing } = this.state;
     const { handleNavBar } = this;
     return (
-      <>
-        <Header navBarShowing={navBarShowing} handleNavBar={handleNavBar} />
-        <NavigationBar navBarShowing={navBarShowing} handleNavBar={handleNavBar} />
-        {this.renderPage()}
-      </>
+      <RouteContext.Provider value={this.state.route}>
+        <>
+          <Header navBarShowing={navBarShowing} handleNavBar={handleNavBar} />
+          <NavigationBar navBarShowing={navBarShowing} handleNavBar={handleNavBar} />
+          {this.renderPage()}
+        </>
+      </RouteContext.Provider>
     );
   }
 }

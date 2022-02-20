@@ -21,9 +21,9 @@ CREATE TABLE "moves" (
 
 CREATE TABLE "games" (
 	"gameId" serial NOT NULL,
+  "message" TEXT NOT NULL,
 	"playerName" TEXT NOT NULL,
 	"playerSide" TEXT NOT NULL,
-	"message" TEXT NOT NULL,
 	"opponentName" TEXT,
 	"createdAt" timestamp with time zone NOT NULL default now(),
 	CONSTRAINT "games_pk" PRIMARY KEY ("gameId")

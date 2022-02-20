@@ -4,7 +4,7 @@ import ReactBoard from '../components/board';
 import PlayerPalette from '../components/player-palette';
 import Board from '../lib/board';
 import GameState from '../lib/gamestate';
-import parseRoute from '../lib/parse-route';
+import RouteContext from '../lib/route-context';
 
 export default class Game extends React.Component {
   constructor(props) {
@@ -13,41 +13,33 @@ export default class Game extends React.Component {
       board: new Board(),
       gamestate: new GameState(),
       meta: null,
-      side: null,
-      socket: io()
+      side: 'white'
     };
+
     this.cancelGame = this.cancelGame.bind(this);
   }
 
   componentDidMount() {
-    this.state.socket.on('room joined', () => {
-      const params = parseRoute(window.location.hash).params;
-      const gameId = params.get('gameId');
 
-      fetch(`/api/games/${gameId}`)
-        .then(res => res.json())
-        .then(result => {
-          this.setState({ meta: result });
-        });
-    });
+    const { params } = this.context;
 
-    const params = parseRoute(window.location.hash).params;
     const gameId = params.get('gameId');
     const side = params.get('side');
 
-    fetch(`/api/games/${gameId}`)
-      .then(res => res.json())
-      .then(result => {
-        const { socket } = this.state;
+    this.socket = io('/', { query: { gameId } });
 
-        this.setState({ meta: result, side });
-
-        socket.emit('join room', this.state.meta.gameId);
-      });
+    this.socket.on('room joined', meta => {
+      if (this.state.meta) {
+        if (this.state.meta.opponentName) {
+          return;
+        }
+      }
+      this.setState({ meta, side });
+    });
   }
 
   componentWillUnmount() {
-    this.state.socket.disconnect();
+    this.socket.disconnect();
   }
 
   cancelGame() {
@@ -67,17 +59,23 @@ export default class Game extends React.Component {
     const { board, meta, side } = this.state;
 
     const dummy = {
-      username: 'Anonymous',
-      side: 'white'
+      username: 'Anonymous'
     };
 
     let player = dummy;
     let opponent = null;
 
     if (meta) {
-      player = { username: meta.playerName, side: meta.playerSide };
+      player = { username: meta.playerName };
       if (meta.opponentName) {
-        opponent = { username: meta.opponentName, side: meta.opponentSide };
+        if (side === meta.playerSide) {
+          player = { username: meta.playerName };
+          opponent = { username: meta.opponentName };
+
+        } else {
+          player = { username: meta.opponentName };
+          opponent = { username: meta.playerName };
+        }
       }
     }
 
@@ -112,3 +110,5 @@ export default class Game extends React.Component {
     );
   }
 }
+
+Game.contextType = RouteContext;

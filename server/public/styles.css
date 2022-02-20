@@ -36,17 +36,8 @@ a:hover {
   height: 66px;
 }
 
-.hamburger-menu-btn {
-  border-radius: 5px;
-  border: 4px solid #32363c;
-}
-
-.hamburger-menu-btn.selected {
-  border: 4px solid rgba(199, 204, 219, 1);
-}
-
-.hamburger-menu-btn:hover {
-  border: 4px solid rgba(199, 204, 219, 0.7);
+.three-stripes-button {
+  background-color: transparent;
 }
 
 .avatar {
@@ -323,10 +314,6 @@ a:hover {
 
 .chess-piece {
   height: 60%;
-}
-
-.three-stripes-button {
-  background-color: transparent;
 }
 
 .bg-black {

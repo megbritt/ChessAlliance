@@ -20,21 +20,34 @@ const io = new Server(server);
 
 io.on('connection', socket => {
 
+  const { gameId } = socket.handshake.query;
+
+  if (gameId) {
+    const room = gameId.toString();
+    socket.join(room);
+    const sql = `
+    select *
+      from "games"
+    where "gameId" = $1
+    `;
+
+    const params = [gameId];
+
+    db.query(sql, params)
+      .then(result => {
+        const meta = result.rows[0];
+        io.to(room).emit('room joined', meta);
+        io.to('lobby').emit('game joined', meta);
+      })
+      .catch(err => {
+        console.error(err);
+        socket.disconnect();
+      });
+
+  }
+
   socket.on('join lobby', () => {
     socket.join('lobby');
-  });
-
-  socket.on('game joined', () => {
-    io.to('lobby').emit('game joined');
-  });
-
-  socket.on('join room', gameId => {
-    socket.join(gameId.toString());
-
-    const room = gameId.toString();
-
-    socket.join(room);
-    socket.broadcast.to(room).emit('room joined');
   });
 
 });
@@ -87,13 +100,15 @@ app.post('/api/games', (req, res, next) => {
     throw new ClientError(400, 'missing required field');
   }
 
+  const opponentSide = playerSide === 'white' ? 'brown' : 'white';
+
   const sql = `
-  insert into "games" ("playerName", "playerSide", "message")
-  values ($1, $2, $3)
+  insert into "games" ("message", "playerName", "playerSide", "opponentSide", "resolved")
+  values ($1, $2, $3, $4, FALSE)
   returning *
   `;
 
-  const params = [playerName, playerSide, message];
+  const params = [message, playerName, playerSide, opponentSide];
 
   db.query(sql, params)
     .then(result => {
@@ -102,7 +117,7 @@ app.post('/api/games', (req, res, next) => {
     .catch(err => next(err));
 });
 
-app.put('/api/games/:gameId', (req, res, next) => {
+app.post('/api/games/:gameId', (req, res, next) => {
   const { opponentName } = req.body;
   if (!opponentName) {
     throw new ClientError(400, 'missing required field');

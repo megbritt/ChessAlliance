@@ -9,29 +9,49 @@ export default class JoinGame extends React.Component {
     super(props);
 
     this.state = {
-      posts: null,
-      socket: io()
+      posts: []
     };
+
+    this.loadGames = this.loadGames.bind(this);
   }
 
   componentDidMount() {
 
-    const { socket } = this.state;
+    this.socket = io();
+
+    const { socket } = this;
+
+    socket.on('game joined', removed => {
+      const posts = this.state.posts.filter(post => post.gameId !== removed.gameId);
+
+      this.setState({ posts });
+    });
+
+    socket.on('disconnect', reason => {
+      if (reason === 'io server disconnect') {
+        console.error({ error: 'An unexpected error occured.' });
+      }
+    });
+
     socket.emit('join lobby');
 
+    this.loadGames();
+
+  }
+
+  componentWillUnmount() {
+    this.socket.disconnect();
+  }
+
+  loadGames() {
     fetch('api/games')
       .then(res => res.json())
       .then(result => this.setState({ posts: result }));
   }
 
-  componentWillUnmount() {
-    this.state.socket.disconnect();
-  }
-
   render() {
-    const posts = this.state.posts
-      ? this.state.posts.map(post => <Post key={post.gameId} meta={post} />)
-      : null;
+
+    const posts = this.state.posts.map(post => <Post key={post.gameId} meta={post} />);
 
     return (
 

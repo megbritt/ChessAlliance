@@ -15,14 +15,14 @@ export default class Post extends React.Component {
   }
 
   handleSelect() {
-    const { meta } = this.state;
+    const { meta } = this.props;
 
     const body = {
       opponentName: 'Anonymous'
     };
 
     const req = {
-      method: 'PUT',
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
