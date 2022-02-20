@@ -20,14 +20,27 @@ export default class Game extends React.Component {
   }
 
   componentDidMount() {
-    const gameId = parseRoute(window.location.hash).params.get('gameId');
+    this.state.socket.on('room joined', () => {
+      const params = parseRoute(window.location.hash).params;
+      const gameId = params.get('gameId');
+
+      fetch(`/api/games/${gameId}`)
+        .then(res => res.json())
+        .then(result => {
+          this.setState({ meta: result });
+        });
+    });
+
+    const params = parseRoute(window.location.hash).params;
+    const gameId = params.get('gameId');
+    const side = params.get('side');
 
     fetch(`/api/games/${gameId}`)
       .then(res => res.json())
       .then(result => {
         const { socket } = this.state;
 
-        this.setState({ meta: result });
+        this.setState({ meta: result, side });
 
         socket.emit('join room', this.state.meta.gameId);
       });
@@ -51,7 +64,7 @@ export default class Game extends React.Component {
   }
 
   render() {
-    const { board, meta } = this.state;
+    const { board, meta, side } = this.state;
 
     const dummy = {
       username: 'Anonymous',
@@ -78,16 +91,16 @@ export default class Game extends React.Component {
           <div className="col">
 
             <div className="board-container my-2">
-              <ReactBoard board={board} side={player.side} />
+              <ReactBoard board={board} side={side} />
             </div>
           </div>
 
           <div className="col-auto d-none d-md-block">
             <div className="w-100 p-2">
-              <PlayerPalette player={null} cancelAction={this.cancelGame} />
+              <PlayerPalette player={opponent} cancelAction={this.cancelGame} />
             </div>
             <div className="w-100 p-2">
-              <PlayerPalette player={opponent} />
+              <PlayerPalette player={player} />
             </div>
           </div>
         </div>
