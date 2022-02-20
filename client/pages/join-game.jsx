@@ -9,18 +9,23 @@ export default class JoinGame extends React.Component {
     super(props);
 
     this.state = {
-      posts: null
+      posts: null,
+      socket: io()
     };
   }
 
   componentDidMount() {
 
-    const socket = io();
+    const { socket } = this.state;
     socket.emit('join lobby');
 
     fetch('api/games')
       .then(res => res.json())
       .then(result => this.setState({ posts: result }));
+  }
+
+  componentWillUnmount() {
+    this.state.socket.disconnect();
   }
 
   render() {
