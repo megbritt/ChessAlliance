@@ -109,11 +109,12 @@ app.put('/api/games/:gameId', (req, res, next) => {
   }
 
   const sql = `
-  insert into "games" ("opponentName")
-  values ($2)
+  update "games"
+    set "opponentName" = $2
    where "gameId" = $1
   returning *
   `;
+
   const params = [gameId, opponentName];
   db.query(sql, params)
     .then(result => {
