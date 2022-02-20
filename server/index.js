@@ -20,8 +20,6 @@ const io = new Server(server);
 
 io.on('connection', socket => {
 
-  console.log('A user is currently connected.');
-
   socket.on('join lobby', () => {
     socket.join('lobby');
   });

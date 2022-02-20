@@ -16,6 +16,7 @@ export default class JoinGame extends React.Component {
   componentDidMount() {
 
     const socket = io();
+    socket.emit('join lobby');
 
     fetch('api/games')
       .then(res => res.json())
