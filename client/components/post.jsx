@@ -31,7 +31,9 @@ export default class Post extends React.Component {
 
     fetch(`/api/games/${meta.gameId}`, req)
       .then(res => res.json())
-      .then(result => console.log(result));
+      .then(result => {
+        window.location.hash = `#game?gameId=${result.gameId}`;
+      });
   }
 
   render() {
