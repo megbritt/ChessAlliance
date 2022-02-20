@@ -19,6 +19,9 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 io.on('connection', socket => {
+
+  console.log('A user is currently connected.');
+
   socket.on('join lobby', () => {
     socket.join('lobby');
   });
@@ -153,5 +156,5 @@ app.delete('/api/games/:gameId', (req, res, next) => {
 app.use(errorMiddleware);
 
 app.listen(process.env.PORT, () => {
-  console.log(`Express server listening on port ${process.env.PORT}`);
+  console.log(`socket.io server listening on port ${process.env.PORT}`);
 });
