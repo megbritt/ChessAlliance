@@ -6,7 +6,7 @@ import JoinGame from './pages/join-game';
 import parseRoute from './lib/parse-route';
 import PostForm from './pages/post-form';
 import Game from './pages/game';
-import RouteContext from '.lib/route-context';
+import RouteContext from './lib/route-context';
 
 export default class App extends React.Component {
   constructor(props) {

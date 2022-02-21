@@ -174,6 +174,6 @@ app.delete('/api/games/:gameId', (req, res, next) => {
 
 app.use(errorMiddleware);
 
-app.listen(process.env.PORT, () => {
+server.listen(process.env.PORT, () => {
   console.log(`socket.io server listening on port ${process.env.PORT}`);
 });
