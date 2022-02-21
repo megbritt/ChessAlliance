@@ -38,10 +38,13 @@ module.exports = {
       watch: true
     },
     proxy: {
-      '/api': `http://localhost:${process.env.PORT}`
+      '/api': `http://localhost:${process.env.PORT}`,
+      '/socket.io': {
+        target: `http://localhost:${process.env.PORT}`,
+        ws: true
+      }
     }
   },
-  stats: 'summary',
   performance: {
     hints: false
   }

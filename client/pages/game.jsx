@@ -1,9 +1,10 @@
 import React from 'react';
+import { io } from 'socket.io-client';
 import ReactBoard from '../components/board';
 import PlayerPalette from '../components/player-palette';
 import Board from '../lib/board';
 import GameState from '../lib/gamestate';
-import parseRoute from '../lib/parse-route';
+import RouteContext from '../lib/route-context';
 
 export default class Game extends React.Component {
   constructor(props) {
@@ -11,19 +12,34 @@ export default class Game extends React.Component {
     this.state = {
       board: new Board(),
       gamestate: new GameState(),
-      meta: null
+      meta: null,
+      side: 'white'
     };
+
     this.cancelGame = this.cancelGame.bind(this);
   }
 
   componentDidMount() {
-    const gameId = parseRoute(window.location.hash).params.get('gameId');
 
-    fetch(`/api/games/${gameId}`)
-      .then(res => res.json())
-      .then(result => {
-        this.setState({ meta: result });
-      });
+    const { params } = this.context;
+
+    const gameId = params.get('gameId');
+    const side = params.get('side');
+
+    this.socket = io('/', { query: { gameId } });
+
+    this.socket.on('room joined', meta => {
+      if (this.state.meta) {
+        if (this.state.meta.opponentName) {
+          return;
+        }
+      }
+      this.setState({ meta, side });
+    });
+  }
+
+  componentWillUnmount() {
+    this.socket.disconnect();
   }
 
   cancelGame() {
@@ -40,34 +56,46 @@ export default class Game extends React.Component {
   }
 
   render() {
-    const { board, meta } = this.state;
+    const { board, meta, side } = this.state;
 
     const dummy = {
-      username: 'Anonymous',
-      side: 'white'
+      username: 'Anonymous'
     };
 
-    const player = meta
-      ? { username: meta.playerName, side: meta.playerSide }
-      : dummy;
+    let player = dummy;
+    let opponent = null;
+
+    if (meta) {
+      player = { username: meta.playerName };
+      if (meta.opponentName) {
+        if (side === meta.playerSide) {
+          player = { username: meta.playerName };
+          opponent = { username: meta.opponentName };
+
+        } else {
+          player = { username: meta.opponentName };
+          opponent = { username: meta.playerName };
+        }
+      }
+    }
 
     return (
       <div className="game page-height mx-auto">
         <div className="w-100 d-block d-md-none p-2">
-          <PlayerPalette player={null} cancelAction={this.cancelGame} />
+          <PlayerPalette player={opponent} cancelAction={this.cancelGame} />
         </div>
 
         <div className="w-100 row">
           <div className="col">
 
             <div className="board-container my-2">
-              <ReactBoard board={board} side={player.side} />
+              <ReactBoard board={board} side={side} />
             </div>
           </div>
 
           <div className="col-auto d-none d-md-block">
             <div className="w-100 p-2">
-              <PlayerPalette player={null} cancelAction={this.cancelGame} />
+              <PlayerPalette player={opponent} cancelAction={this.cancelGame} />
             </div>
             <div className="w-100 p-2">
               <PlayerPalette player={player} />
@@ -82,3 +110,5 @@ export default class Game extends React.Component {
     );
   }
 }
+
+Game.contextType = RouteContext;
