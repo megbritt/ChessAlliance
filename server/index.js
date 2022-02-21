@@ -23,8 +23,9 @@ io.on('connection', socket => {
   const { gameId } = socket.handshake.query;
 
   if (gameId) {
-    const room = gameId.toString();
-    socket.join(room);
+
+    socket.join(gameId);
+
     const sql = `
     select *
       from "games"
@@ -36,7 +37,7 @@ io.on('connection', socket => {
     db.query(sql, params)
       .then(result => {
         const meta = result.rows[0];
-        io.to(room).emit('room joined', meta);
+        io.to(gameId).emit('room joined', meta);
         io.to('lobby').emit('game joined', meta);
       })
       .catch(err => {
@@ -142,6 +143,39 @@ app.post('/api/games/:gameId', (req, res, next) => {
         throw new ClientError(404, 'gameId does not exist');
       }
       res.json(result.rows[0]);
+    })
+    .catch(err => next(err));
+});
+
+app.post('/api/moves/:gameId', (req, res, next) => {
+  const { start, end } = req.body;
+  if (!start || !end) {
+    throw new ClientError(400, 'missing required field');
+  }
+  if (Number.isNaN(start)) {
+    throw new ClientError(400, `${start} is not a valid starting coordinate`);
+  } else if (Number.isNaN(end)) {
+    throw new ClientError(400, `${end} is not a valid ending coordinate`);
+  }
+  const gameId = req.params.gameId;
+  const gameIdInt = parseInt(gameId);
+  if (!Number.isInteger(gameIdInt)) {
+    throw new ClientError(400, `${gameId} is not a valid gameId`);
+  }
+  const sql = `
+  insert into "moves" ("gameId", "start", "end")
+  values ($1, $2, $3)
+  returning *
+  `;
+  const params = [gameId, start, end];
+  db.query(sql, params)
+    .then(result => {
+      if (result.rows.length === 0) {
+        throw new ClientError(500, 'An unexpected error occurred.');
+      }
+      const move = result.rows[0];
+      io.to(gameId).emit(move);
+      res.json(move);
     })
     .catch(err => next(err));
 });
