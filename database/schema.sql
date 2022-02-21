@@ -25,6 +25,7 @@ CREATE TABLE "games" (
 	"playerName" TEXT NOT NULL,
 	"playerSide" TEXT NOT NULL,
 	"opponentName" TEXT,
+  "opponentSide" TEXT NOT NULL,
 	"createdAt" timestamp with time zone NOT NULL default now(),
 	CONSTRAINT "games_pk" PRIMARY KEY ("gameId")
 ) WITH (
