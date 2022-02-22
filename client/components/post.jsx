@@ -6,9 +6,6 @@ export default class Post extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {
-      meta: this.props.meta
-    };
 
     this.handleSelect = this.handleSelect.bind(this);
 
@@ -48,7 +45,7 @@ export default class Post extends React.Component {
         <div className="row">
           <div className="col-4">
             <div className="post-board-container">
-              <ReactBoard board={board} side={side} />
+              <ReactBoard board={board} highlighted={[]} selected={0} side={side} />
             </div>
           </div>
           <div className="col post-text">

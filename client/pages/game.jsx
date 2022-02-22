@@ -13,7 +13,9 @@ export default class Game extends React.Component {
       board: new Board(),
       gamestate: new GameState(),
       meta: null,
-      side: 'white'
+      side: 'white',
+      selected: 24,
+      highlighted: [34, 44]
     };
 
     this.cancelGame = this.cancelGame.bind(this);
@@ -56,7 +58,7 @@ export default class Game extends React.Component {
   }
 
   render() {
-    const { board, meta, side } = this.state;
+    const { board, meta, side, selected, highlighted } = this.state;
 
     const dummy = {
       username: 'Anonymous'
@@ -89,7 +91,7 @@ export default class Game extends React.Component {
           <div className="col">
 
             <div className="board-container my-2">
-              <ReactBoard board={board} side={side} />
+              <ReactBoard board={board} highlighted={highlighted} selected={selected} side={side} />
             </div>
           </div>
 
