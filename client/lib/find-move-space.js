@@ -7,8 +7,8 @@ export default function findMoveSpace(board, turn, start, capturesOnly, gamestat
   const piece = board[start].piece;
   const moveSpace = [];
 
-  if (piece === 'p') {
-    if (board[start].player === 'w') {
+  if (piece === 'pawn') {
+    if (board[start].player === 'white') {
       // starting moves
       if (!capturesOnly) {
         if (!board[start + 10].piece) {
@@ -39,12 +39,12 @@ export default function findMoveSpace(board, turn, start, capturesOnly, gamestat
         if (!coords.isCoord(newSpot)) {
           continue;
         } else if ((start > 50 && start < 59) &&
-          (board[newSpot].player === 'b' && board[newSpot].piece === 'p') &&
+          (board[newSpot].player === 'brown' && board[newSpot].piece === 'pawn') &&
           gamestate.enPassantBlack === (newSpot + 20)) {
           moveSpace.push(newSpot + 10);
         }
       }
-    } else if (board[start].player === 'b') {
+    } else if (board[start].player === 'brown') {
       // starting moves
       if (!capturesOnly) {
         if (!board[start - 10].piece) {
@@ -75,13 +75,13 @@ export default function findMoveSpace(board, turn, start, capturesOnly, gamestat
         if (!coords.isCoord(newSpot)) {
           continue;
         } else if ((start > 40 && start < 49) &&
-          (board[newSpot].player === 'w' && board[newSpot].piece === 'p') &&
+          (board[newSpot].player === 'white' && board[newSpot].piece === 'pawn') &&
           gamestate.enPassantWhite === (newSpot - 20)) {
           moveSpace.push(newSpot - 10);
         }
       }
     }
-  } else if (piece === 'r') {
+  } else if (piece === 'rook') {
     const rookMoves = [1, -1, 10, -10];
     for (const rookmove of rookMoves) {
       for (let multiplier = 1; multiplier < 9; multiplier++) {
@@ -98,7 +98,7 @@ export default function findMoveSpace(board, turn, start, capturesOnly, gamestat
         }
       }
     }
-  } else if (piece === 'n') {
+  } else if (piece === 'knight') {
     const knightMoves = [21, 12, -21, -12, 8, 19, -8, -19];
     for (const knightMove of knightMoves) {
       const newSpot = start + knightMove;
@@ -112,7 +112,7 @@ export default function findMoveSpace(board, turn, start, capturesOnly, gamestat
         moveSpace.push(newSpot);
       }
     }
-  } else if (piece === 'b') {
+  } else if (piece === 'bishop') {
     const bishopMoves = [11, -11, 9, -9];
     for (const bishopMove of bishopMoves) {
       for (let multiplier = 1; multiplier < 9; multiplier++) {
@@ -129,7 +129,7 @@ export default function findMoveSpace(board, turn, start, capturesOnly, gamestat
         }
       }
     }
-  } else if (piece === 'q') {
+  } else if (piece === 'queen') {
     const queenMoves = [1, -1, 10, -10, 11, -11, 9, -9];
     for (const queenMove of queenMoves) {
       for (let multiplier = 1; multiplier < 9; multiplier++) {
@@ -146,7 +146,7 @@ export default function findMoveSpace(board, turn, start, capturesOnly, gamestat
         }
       }
     }
-  } else if (piece === 'k') {
+  } else if (piece === 'king') {
     const kingMoves = [10, -10, 1, -1, 11, -11, 9, -9];
 
     // normal moves

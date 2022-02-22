@@ -13,7 +13,7 @@ export default function isViableMove(board, gamestate, turn, start, end) {
   // find ally king coord after move
   let kingCoord;
   for (const coord of coords) {
-    if (potentialBoard[coord].player === turn[0] && potentialBoard[coord].piece === 'k') {
+    if (potentialBoard[coord].player === turn[0] && potentialBoard[coord].piece === 'king') {
       kingCoord = coord;
       break;
     }

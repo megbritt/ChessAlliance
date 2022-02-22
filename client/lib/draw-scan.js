@@ -83,9 +83,9 @@ export default function drawScan(board, gamestate) {
   const whitePieces = [];
   const brownPieces = [];
   for (const coord of coords) {
-    if (board[coord].player === 'w') {
+    if (board[coord].player === 'white') {
       whitePieces.push(board[coord].piece);
-    } else if (board[coord].player === 'b') {
+    } else if (board[coord].player === 'brown') {
       brownPieces.push(board[coord].piece);
     }
   }
@@ -111,7 +111,7 @@ export default function drawScan(board, gamestate) {
       }
     }
   } else if (brownPieces.length === 2 && whitePieces.length === 2) {
-    if (brownPieces.includes('b') && whitePieces.includes('b')) {
+    if (brownPieces.includes('brown') && whitePieces.includes('brown')) {
       const bishopCoords = [];
       for (const coord of coords) {
         if (board[coord].piece === 'b') {

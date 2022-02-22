@@ -28,7 +28,6 @@ export default class Game extends React.Component {
       gamestate: new GameState(),
       meta: null,
       side: 'white',
-      phase: 'selecting',
       selected: 0,
       highlighted: [],
       whiteCaptured: [],
@@ -142,6 +141,8 @@ export default class Game extends React.Component {
 
     const coord = parseInt(event.target.closest('.square').id);
 
+    console.log('event.target', event.target);
+
     console.log('event.target.closest', event.target.closest);
     console.log('coord', coord);
 
@@ -154,6 +155,7 @@ export default class Game extends React.Component {
     }
 
     if (phase === 'selecting') {
+      console.log('in selecting phase');
       showOptions(coord);
     } else if (phase === 'showing options') {
       decideMove(coord);
@@ -164,18 +166,21 @@ export default class Game extends React.Component {
     const { board, gamestate } = this.state;
 
     if (blankSquare(board, start)) {
+      console.log('blank square true');
       return;
     }
 
-    if (!isViableStart(board, gamestate, start, gamestate.turn)) {
-      return;
-    }
+    // if (!isViableStart(board, gamestate, start, gamestate.turn)) {
+    //  console.log('!isViableStart');
+    //  return;
+    // }
 
     const highlighted = [];
     const moveSpace = findMoveSpace(board, gamestate.turn, start, false, gamestate);
     for (let i = 0; i < moveSpace.length; i++) {
       if (isViableMove(board, gamestate, gamestate.turn, start, moveSpace[i])) {
         highlighted.push(moveSpace[i]);
+        console.log('highlighted.push(moveSpace[i])', highlighted.push(moveSpace[i]));
       }
     }
     this.setState({
