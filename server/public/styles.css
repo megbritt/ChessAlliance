@@ -319,6 +319,7 @@ a:hover {
 .bg-black {
   background-color: black;
   border-radius: 15px;
+  padding: 15px;
 }
 
 .board-container .board .board-row .tile.highlighted {
