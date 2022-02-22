@@ -141,6 +141,10 @@ export default class Game extends React.Component {
     const { showOptions, decideMove } = this;
 
     const coord = parseInt(event.target.closest('.square').id);
+
+    console.log('event.target.closest', event.target.closest);
+    console.log('coord', coord);
+
     if (Number.isNaN(coord)) {
       return;
     }
@@ -170,7 +174,7 @@ export default class Game extends React.Component {
     const highlighted = [];
     const moveSpace = findMoveSpace(board, gamestate.turn, start, false, gamestate);
     for (let i = 0; i < moveSpace.length; i++) {
-      if (isViableMove(board, gamestate.turn, start, moveSpace[i])) {
+      if (isViableMove(board, gamestate, gamestate.turn, start, moveSpace[i])) {
         highlighted.push(moveSpace[i]);
       }
     }
@@ -234,12 +238,12 @@ export default class Game extends React.Component {
     let captured = null;
     // update draw counter
     if (board[end].piece) {
-      gamestate.pawnOrKillCounter = 0;
+      gamestate.pawnOrCapturedCounter = 0;
       captured = board[end].player + board[end].piece;
     } else if (board[start].piece === 'p') {
-      gamestate.pawnOrKillCounter = 0;
+      gamestate.pawnOrCapturedCounter = 0;
     } else {
-      gamestate.pawnOrKillCounter++;
+      gamestate.pawnOrCapturedCounter++;
     }
     // record en passant
     if (board[start].piece === 'p' && (start > 20 && start < 29) && (end > 40 && end < 49)) {

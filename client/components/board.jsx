@@ -30,9 +30,17 @@ export default function Board(props) {
             piece = <img src={src} className="chess-piece" />;
           }
 
+          const selectedToInt = parseInt(selected);
+          const highlightedToInt = parseInt(highlighted);
+
           const highlight = highlighted.includes(coord) ? ' highlighted' : '';
-          const select = selected === coord ? ' selected' : '';
+          const select = selectedToInt === coord ? ' selected' : '';
+
           const squareClass = 'square' + highlight + select;
+
+          console.log('typeof selectedToInt:', typeof selectedToInt);
+          console.log('typeof coord:', typeof coord);
+          console.log('typeof highlightedToInt', typeof highlightedToInt);
 
           return (
             <div key={coord} className={squareClass} id={coord}>
