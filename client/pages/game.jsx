@@ -4,11 +4,10 @@ import ReactBoard from '../components/board';
 import PlayerPalette from '../components/player-palette';
 import Board from '../lib/board';
 import GameState from '../lib/gamestate';
-import Coords from '../lib/coords';
 import RouteContext from '../lib/route-context';
 
 import copy from '../lib/copy';
-import isEmptyAt from '../lib/is-empty-at';
+import blankSquare from '../lib/blank-square';
 import isViableMove from '../lib/is-viable-move';
 import isViableStart from '../lib/is-viable-start';
 import movePiece from '../lib/move-piece';
@@ -68,22 +67,24 @@ export default class Game extends React.Component {
       this.setState({ meta, side, phase });
     });
     this.socket.on('move made', move => {
-      const { board, gamestate, whiteDead, blackDead } = this.state;
+      const { board, gamestate, whiteCaptured, brownCaptured } = this.state;
       const { start, end, promotion } = move;
       if (!board[start].piece) {
         return;
       }
       const nextBoard = copy(board);
       const nextGamestate = copy(gamestate);
-      const killed = this.executeMove(nextBoard, nextGamestate, start, end);
-      const nextWhiteDead = whiteDead;
-      const nextBlackDead = blackDead;
-      // add dead pieces to player palette
-      if (killed) {
-        if (killed[0] === 'w') {
-          nextWhiteDead.push(killed);
+      const captured = this.executeMove(nextBoard, nextGamestate, start, end);
+      const nextWhiteCaptured = whiteCaptured;
+      const nextBrownCaptured = brownCaptured;
+
+      // add captured pieces to player palette
+
+      if (captured) {
+        if (captured[0] === 'w') {
+          nextWhiteCaptured.push(captured);
         } else {
-          nextBlackDead.push(killed);
+          nextBrownCaptured.push(captured);
         }
       }
       let phase = 'selecting';
@@ -111,8 +112,8 @@ export default class Game extends React.Component {
         board: nextBoard,
         gamestate: nextGamestate,
         phase,
-        whiteDead: nextWhiteDead,
-        blackDead: nextBlackDead,
+        whiteCaptured: nextWhiteCaptured,
+        brownCaptured: nextBrownCaptured,
         showCheck,
         showCheckmate,
         showDraw
@@ -169,7 +170,7 @@ export default class Game extends React.Component {
     const highlighted = [];
     const moveSpace = findMoveSpace(board, gamestate.turn, start, false, gamestate);
     for (let i = 0; i < moveSpace.length; i++) {
-      if (possibleToMove(board, gamestate.turn, start, moveSpace[i])) {
+      if (isViableMove(board, gamestate.turn, start, moveSpace[i])) {
         highlighted.push(moveSpace[i]);
       }
     }
@@ -198,41 +199,43 @@ export default class Game extends React.Component {
     const nextGameState = copy(gamestate);
 
     let phase = 'opponent turn';
-    const killed = this.executeMove(nextBoard, nextGamestate, selected, end);
-    const nextWhiteDead = whiteDead;
-    const nextBlackDead = blackDead;
-    // add dead pieces to player palette
-    if (killed) {
-      if (killed[0] === 'w') {
-        nextWhiteDead.push(killed);
+    const captured = this.executeMove(nextBoard, nextGameState, selected, end);
+    const nextWhiteCaptured = whiteCaptured;
+    const nextBrownCaptured = brownCaptured;
+
+    // add captured pieces to player palette
+
+    if (captured) {
+      if (captured[0] === 'w') {
+        nextWhiteCaptured.push(captured);
       } else {
-        nextBlackDead.push(killed);
+        nextBrownCaptured.push(captured);
       }
     }
-    if (nextGamestate.promoting) {
+    if (nextGameState.promoting) {
       phase = 'promoting';
       window.localStorage.setItem('start', selected.toString());
     }
     this.setState({
       board: nextBoard,
-      gamestate: nextGamestate,
+      gamestate: nextGameState,
       phase,
       selected: 0,
       highlighted: [],
-      whiteDead: nextWhiteDead,
-      blackDead: nextBlackDead
+      whiteCaptured: nextWhiteCaptured,
+      brownCaptured: nextBrownCaptured
     });
-    if (!nextGamestate.promoting) {
-      this.resolveTurn(nextGamestate, selected, end);
+    if (!nextGameState.promoting) {
+      this.resolveTurn(nextGameState, selected, end);
     }
   }
 
   executeMove(board, gamestate, start, end) {
-    let killed = null;
+    let captured = null;
     // update draw counter
     if (board[end].piece) {
       gamestate.pawnOrKillCounter = 0;
-      killed = board[end].player + board[end].piece;
+      captured = board[end].player + board[end].piece;
     } else if (board[start].piece === 'p') {
       gamestate.pawnOrKillCounter = 0;
     } else {
@@ -242,7 +245,7 @@ export default class Game extends React.Component {
     if (board[start].piece === 'p' && (start > 20 && start < 29) && (end > 40 && end < 49)) {
       gamestate.enPassantWhite = start;
     } else if (board[start].piece === 'p' && (start > 70 && start < 79) && (end > 50 && end < 59)) {
-      gamestate.enPassantBlack = start;
+      gamestate.enPassantBrown = start;
     }
     // move piece
     movePiece(board, start, end);
@@ -254,7 +257,7 @@ export default class Game extends React.Component {
     castleScan(board, gamestate);
     // change turn
     changeTurn(gamestate);
-    return killed;
+    return captured;
   }
 
   resolveTurn(nextGamestate, start, end, promotion = null) {
@@ -320,12 +323,12 @@ export default class Game extends React.Component {
 
   render() {
     const { board, meta, side, selected, highlighted, phase } = this.state;
-    const { whiteDead, blackDead, showCheck, showCheckmate, showDraw } = this.state;
+    const { whiteCaptured, brownCaptured, showCheck, showCheckmate, showDraw } = this.state;
     const dummy = {
       username: 'Anonymous'
     };
-    const playerDead = side === 'white' ? whiteDead : blackDead;
-    const opponentDead = side === 'white' ? blackDead : whiteDead;
+    const playerCaptured = side === 'white' ? whiteCaptured : brownCaptured;
+    const opponentCaptured = side === 'white' ? brownCaptured : whiteCaptured;
     const promoteFunc = phase === 'promoting' ? this.promotePawn : null;
     let player = dummy;
     let opponent = null;
@@ -342,4 +345,39 @@ export default class Game extends React.Component {
       }
     }
 
+    return (
+      <div className="game page-height mx-auto">
+        <div className="w-100 d-block d-sm-none p-2">
+          <PlayerPalette player={opponent} captured={opponentCaptured} cancelAction={this.cancelGame} />
+        </div>
+
+        <div className="w-100 row">
+          <div className="col">
+
+            <div className="board-container my-1" onClick={this.handleClick}>
+              <Banner message={'Check'} show={showCheck} />
+              <Banner message={'Checkmate'} show={showCheckmate} />
+              <Banner message={'Draw'} show={showDraw} />
+              <ReactBoard board={board} highlighted={highlighted} selected={selected} side={side} />
+            </div>
+          </div>
+
+          <div className="col-auto d-none d-sm-block">
+            <div className="w-100 p-2">
+              <PlayerPalette player={opponent} captured={opponentCaptured} cancelAction={this.cancelGame} />
+            </div>
+            <div className="w-100 p-2">
+              <PlayerPalette player={player} promote={promoteFunc} captured={playerCaptured} />
+            </div>
+          </div>
+        </div>
+
+        <div className="w-100 d-block d-sm-none p-2">
+          <PlayerPalette player={player} promote={promoteFunc} captured={playerCaptured} />
+        </div>
+      </div>
+    );
+  }
 }
+
+Game.contextType = RouteContext;

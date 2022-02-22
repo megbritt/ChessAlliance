@@ -1,5 +1,5 @@
 import Coords from './coords';
-import isEmptyAt from './is-empty-at';
+import blankSquare from './blank-square';
 import findMoveSpace from './find-move-space';
 const coords = new Coords();
 
@@ -8,7 +8,7 @@ export default function findEnemyMoveSpace(board, turn, gamestate) {
   const enemyCoords = [];
 
   for (const coord of coords) {
-    if (isEmptyAt(board, coord)) {
+    if (blankSquare(board, coord)) {
       continue;
     } else if (board[coord].player === turn[1]) {
       enemyCoords.push(coord);

@@ -1,6 +1,6 @@
 import Coords from './coords';
 import pseudoCopy from './pseudo-copy';
-import isEmptyAt from './is-empty-at';
+import blankSquare from './blank-square';
 import isViableStart from './is-viable-start';
 
 const coords = new Coords();
@@ -21,7 +21,7 @@ export default function drawScan(board, gamestate) {
   const enemyCoords = [];
 
   for (const coord of coords) {
-    if (isEmptyAt(board, coord)) {
+    if (blankSquare(board, coord)) {
       continue;
     } else if (board[coord].player === turn[1]) {
       enemyCoords.push(coord);
