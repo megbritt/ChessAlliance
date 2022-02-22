@@ -148,7 +148,7 @@ app.post('/api/games/:gameId', (req, res, next) => {
 });
 
 app.post('/api/moves/:gameId', (req, res, next) => {
-  const { start, end } = req.body;
+  const { start, end, promotion } = req.body;
   if (!start || !end) {
     throw new ClientError(400, 'missing required field');
   }
@@ -163,18 +163,18 @@ app.post('/api/moves/:gameId', (req, res, next) => {
     throw new ClientError(400, `${gameId} is not a valid gameId`);
   }
   const sql = `
-  insert into "moves" ("gameId", "start", "end")
-  values ($1, $2, $3)
+  insert into "moves" ("gameId", "start", "end", "promotion")
+  values ($1, $2, $3, $4)
   returning *
   `;
-  const params = [gameId, start, end];
+  const params = [gameId, start, end, promotion];
   db.query(sql, params)
     .then(result => {
       if (result.rows.length === 0) {
         throw new ClientError(500, 'An unexpected error occurred.');
       }
       const move = result.rows[0];
-      io.to(gameId).emit(move);
+      io.to(gameId).emit('move made', move);
       res.json(move);
     })
     .catch(err => next(err));

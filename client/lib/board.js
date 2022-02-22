@@ -5,7 +5,10 @@ const coords = new Coords();
 export default class Board {
   constructor() {
     for (const coord of coords) {
-      this.empty(coord);
+      this[coord] = {
+        piece: null,
+        player: null
+      };
 
       if ((coord > 20 && coord < 29) || (coord > 70 && coord < 79)) {
         this[coord].piece = 'pawn';
@@ -32,21 +35,4 @@ export default class Board {
       }
     }
   }
-
-  copy() {
-    const copy = {};
-    for (const coord of coords) {
-      copy[coord] = this[coord].player + this[coord].piece;
-    }
-
-    return copy;
-  }
-
-  empty(coord) {
-    this[coord] = {
-      piece: null,
-      player: null
-    };
-  }
-
 }

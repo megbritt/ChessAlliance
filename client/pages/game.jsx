@@ -7,7 +7,19 @@ import GameState from '../lib/gamestate';
 import Coords from '../lib/coords';
 import RouteContext from '../lib/route-context';
 
-const coords = new Coords();
+import copy from '../lib/copy';
+import isEmptyAt from '../lib/is-empty-at';
+import isViableMove from '../lib/is-viable-move';
+import isViableStart from '../lib/is-viable-start';
+import movePiece from '../lib/move-piece';
+import findMoveSpace from '../lib/find-move-space';
+import changeTurn from '../lib/change-turn';
+import checkmateScan from '../lib/checkmate-scan';
+import checkScan from '../lib/check-scan';
+import drawScan from '../lib/draw-scan';
+import castleScan from '../lib/castle-scan';
+import pawnScan from '../lib/pawn-scan';
+import Banner from '../components/banner';
 
 export default class Game extends React.Component {
   constructor(props) {
@@ -19,13 +31,22 @@ export default class Game extends React.Component {
       side: 'white',
       phase: 'selecting',
       selected: 0,
-      highlighted: []
+      highlighted: [],
+      whiteCaptured: [],
+      brownCaptured: [],
+      showCheck: 0,
+      showCheckmate: 0,
+      showDraw: 0
     };
 
     this.cancelGame = this.cancelGame.bind(this);
     this.handleClick = this.handleClick.bind(this);
     this.showOptions = this.showOptions.bind(this);
     this.decideMove = this.decideMove.bind(this);
+    this.executeMove = this.executeMove.bind(this);
+    this.resolveTurn = this.resolveTurn.bind(this);
+    this.promotePawn = this.promotePawn.bind(this);
+    this.removeBanner = this.removeBanner.bind(this);
   }
 
   componentDidMount() {
@@ -43,7 +64,59 @@ export default class Game extends React.Component {
           return;
         }
       }
-      this.setState({ meta, side });
+      const phase = side === 'white' ? 'selecting' : 'opponent turn';
+      this.setState({ meta, side, phase });
+    });
+    this.socket.on('move made', move => {
+      const { board, gamestate, whiteDead, blackDead } = this.state;
+      const { start, end, promotion } = move;
+      if (!board[start].piece) {
+        return;
+      }
+      const nextBoard = copy(board);
+      const nextGamestate = copy(gamestate);
+      const killed = this.executeMove(nextBoard, nextGamestate, start, end);
+      const nextWhiteDead = whiteDead;
+      const nextBlackDead = blackDead;
+      // add dead pieces to player palette
+      if (killed) {
+        if (killed[0] === 'w') {
+          nextWhiteDead.push(killed);
+        } else {
+          nextBlackDead.push(killed);
+        }
+      }
+      let phase = 'selecting';
+      // display banners when applicable
+      let showCheck = 0;
+      let showCheckmate = 0;
+      let showDraw = 0;
+      if (nextGamestate.check.wb || nextGamestate.check.bw) {
+        showCheck = setTimeout(this.removeBanner, 2000);
+      }
+      if (nextGamestate.checkmate) {
+        showCheckmate = setTimeout(this.removeBanner, 2000);
+        phase = 'done';
+      }
+      if (nextGamestate.draw) {
+        showDraw = setTimeout(this.removeBanner, 2000);
+        phase = 'done';
+      }
+      // promote any pawns
+      if (promotion) {
+        nextBoard[end].piece = promotion;
+        nextGamestate.promoting = null;
+      }
+      this.setState({
+        board: nextBoard,
+        gamestate: nextGamestate,
+        phase,
+        whiteDead: nextWhiteDead,
+        blackDead: nextBlackDead,
+        showCheck,
+        showCheckmate,
+        showDraw
+      });
     });
   }
 
@@ -53,11 +126,8 @@ export default class Game extends React.Component {
 
   cancelGame() {
     const { gameId } = this.state.meta;
-    const req = {
-      method: 'DELETE'
-    };
 
-    fetch(`/api/games/${gameId}`, req)
+    fetch(`/api/games/${gameId}`, { method: 'DELETE' })
       .then(res => res.json())
       .then(result => {
         window.location.hash = '#join';
@@ -69,10 +139,15 @@ export default class Game extends React.Component {
     const { phase } = this.state;
     const { showOptions, decideMove } = this;
 
-    const coord = parseInt(event.target.closest('.tile').id);
+    const coord = parseInt(event.target.closest('.square').id);
     if (Number.isNaN(coord)) {
       return;
     }
+
+    if (phase === 'opponent turn' || phase === 'promoting' || phase === 'done') {
+      return;
+    }
+
     if (phase === 'selecting') {
       showOptions(coord);
     } else if (phase === 'showing options') {
@@ -83,7 +158,11 @@ export default class Game extends React.Component {
   showOptions(start) {
     const { board, gamestate } = this.state;
 
-    if (board.blankSquare(board, start)) {
+    if (blankSquare(board, start)) {
+      return;
+    }
+
+    if (!isViableStart(board, gamestate, start, gamestate.turn)) {
       return;
     }
 
@@ -103,7 +182,7 @@ export default class Game extends React.Component {
 
   decideMove(end) {
 
-    const { board, gamestate, highlighted, selected } = this.state;
+    const { board, gamestate, highlighted, selected, whiteCaptured, brownCaptured } = this.state;
 
     if (!highlighted.includes(end)) {
       this.setState({
@@ -118,390 +197,149 @@ export default class Game extends React.Component {
     const nextBoard = copy(board);
     const nextGameState = copy(gamestate);
 
-    if (board[end].piece) {
-      nextGameState.pawnOrCaptureCounter = 0;
-    } else if (board[selected].piece === 'pawn') {
-      nextGameState.pawnOrCaptureCounter = 0;
-    } else {
-      nextGameState.pawnOrCaptureCounter++;
+    let phase = 'opponent turn';
+    const killed = this.executeMove(nextBoard, nextGamestate, selected, end);
+    const nextWhiteDead = whiteDead;
+    const nextBlackDead = blackDead;
+    // add dead pieces to player palette
+    if (killed) {
+      if (killed[0] === 'w') {
+        nextWhiteDead.push(killed);
+      } else {
+        nextBlackDead.push(killed);
+      }
     }
-
-    // keep track of en passant
-
-    if (board[selected].piece === 'pawn' && (selected > 20 && selected < 29) && (end > 40 && end < 49)) {
-      nextGameState.enPassantWhite = selected;
-    } else if (board[selected].piece === 'pawn' && (selected > 70 && selected < 79) && (end > 50 && end < 59)) {
-      nextGameState.enPassantBrown = selected;
+    if (nextGamestate.promoting) {
+      phase = 'promoting';
+      window.localStorage.setItem('start', selected.toString());
     }
-
-    movePiece(nextBoard, selected, end);
-
-    changeTurn(nextGameState);
-
     this.setState({
       board: nextBoard,
-      gamestate: nextGameState,
-      phase: 'selecting',
+      gamestate: nextGamestate,
+      phase,
       selected: 0,
-      highlighted: []
+      highlighted: [],
+      whiteDead: nextWhiteDead,
+      blackDead: nextBlackDead
+    });
+    if (!nextGamestate.promoting) {
+      this.resolveTurn(nextGamestate, selected, end);
+    }
+  }
+
+  executeMove(board, gamestate, start, end) {
+    let killed = null;
+    // update draw counter
+    if (board[end].piece) {
+      gamestate.pawnOrKillCounter = 0;
+      killed = board[end].player + board[end].piece;
+    } else if (board[start].piece === 'p') {
+      gamestate.pawnOrKillCounter = 0;
+    } else {
+      gamestate.pawnOrKillCounter++;
+    }
+    // record en passant
+    if (board[start].piece === 'p' && (start > 20 && start < 29) && (end > 40 && end < 49)) {
+      gamestate.enPassantWhite = start;
+    } else if (board[start].piece === 'p' && (start > 70 && start < 79) && (end > 50 && end < 59)) {
+      gamestate.enPassantBlack = start;
+    }
+    // move piece
+    movePiece(board, start, end);
+    // apply scans
+    pawnScan(board, gamestate);
+    checkScan(board, gamestate);
+    checkmateScan(board, gamestate);
+    drawScan(board, gamestate);
+    castleScan(board, gamestate);
+    // change turn
+    changeTurn(gamestate);
+    return killed;
+  }
+
+  resolveTurn(nextGamestate, start, end, promotion = null) {
+    const { meta } = this.state;
+    let phase = 'opponent move';
+    // display banners when applicable
+    let showCheck = 0;
+    let showCheckmate = 0;
+    let showDraw = 0;
+    if (nextGamestate.check.wb || nextGamestate.check.bw) {
+      showCheck = setTimeout(this.removeBanner, 2000);
+    }
+    if (nextGamestate.checkmate) {
+      showCheckmate = setTimeout(this.removeBanner, 2000);
+      phase = 'done';
+    }
+    if (nextGamestate.draw) {
+      showDraw = setTimeout(this.removeBanner, 2000);
+      phase = 'done';
+    }
+    this.setState({
+      phase,
+      showCheck,
+      showCheckmate,
+      showDraw
+    });
+    // update other player
+    const body = { start, end, promotion };
+    const res = {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    };
+    fetch(`/api/moves/${meta.gameId}`, res);
+  }
+
+  promotePawn(event) {
+    const { board, gamestate } = this.state;
+    const nextBoard = copy(board);
+    const nextGamestate = copy(gamestate);
+    const end = gamestate.promoting;
+    const start = window.localStorage.getItem('start');
+    window.localStorage.removeItem('start');
+    nextBoard[end].piece = event.target.id;
+    nextGamestate.promoting = 0;
+    this.setState({
+      board: nextBoard,
+      gamestate: nextGamestate,
+      phase: 'opponent move'
+    });
+    this.resolveTurn(nextGamestate, start, end, event.target.id);
+  }
+
+  removeBanner() {
+    this.setState({
+      showCheck: 0,
+      showCheckmate: 0,
+      showDraw: 0
     });
   }
 
   render() {
-    const { board, meta, side, selected, highlighted } = this.state;
-
+    const { board, meta, side, selected, highlighted, phase } = this.state;
+    const { whiteDead, blackDead, showCheck, showCheckmate, showDraw } = this.state;
     const dummy = {
       username: 'Anonymous'
     };
-
+    const playerDead = side === 'white' ? whiteDead : blackDead;
+    const opponentDead = side === 'white' ? blackDead : whiteDead;
+    const promoteFunc = phase === 'promoting' ? this.promotePawn : null;
     let player = dummy;
     let opponent = null;
-
     if (meta) {
       player = { username: meta.playerName };
       if (meta.opponentName) {
         if (side === meta.playerSide) {
-          player = { username: meta.playerName };
-          opponent = { username: meta.opponentName };
-
+          player = { username: meta.playerName, side };
+          opponent = { username: meta.opponentName, side: meta.opponentSide };
         } else {
-          player = { username: meta.opponentName };
-          opponent = { username: meta.playerName };
+          player = { username: meta.opponentName, side: meta.opponentSide };
+          opponent = { username: meta.playerName, side };
         }
       }
     }
 
-    return (
-      <div className="game page-height mx-auto">
-        <div className="w-100 d-block d-md-none p-2">
-          <PlayerPalette player={opponent} cancelAction={this.cancelGame} />
-        </div>
-
-        <div className="w-100 row">
-          <div className="col">
-
-            <div className="board-container my-2" onClick={this.handleClick}>
-              <ReactBoard board={board} highlighted={highlighted} selected={selected} side={side} />
-            </div>
-          </div>
-
-          <div className="col-auto d-none d-md-block">
-            <div className="w-100 p-2">
-              <PlayerPalette player={opponent} cancelAction={this.cancelGame} />
-            </div>
-            <div className="w-100 p-2">
-              <PlayerPalette player={player} />
-            </div>
-          </div>
-        </div>
-
-        <div className="w-100 d-block d-md-none p-2">
-          <PlayerPalette player={player} />
-        </div>
-      </div>
-    );
-  }
-}
-
-Game.contextType = RouteContext;
-
-function copy(obj) {
-  return { ...obj };
-}
-
-function pseudoCopy(board) { // eslint-disable-line
-  const copy = {};
-  for (const coord of coords) {
-    copy[coord] = board[coord].player + board[coord].piece;
-  }
-
-  return copy;
-}
-
-function empty(board, coord) {
-  board[coord] = {
-    piece: null,
-    player: null
-  };
-}
-
-function blankSquare(board, coord) {
-  if (!board[coord].piece) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-function movePiece(board, start, end) {
-
-  // Castle - Always king's move!
-
-  if (board[start].piece === 'king') {
-    if (start === 15 && end === 13) {
-      movePiece(board, 11, 14);
-    } else if (start === 15 && end === 17) {
-      movePiece(board, 18, 16);
-    } else if (start === 85 && end === 83) {
-      movePiece(board, 81, 84);
-    } else if (start === 85 && end === 87) {
-      movePiece(board, 88, 86);
-    }
-  }
-
-  // en passant
-
-  if (board[start].piece === 'pawn') {
-    if ((end - start === 11 || end - start === 9) && !board[end].piece) {
-      empty(board, end - 10);
-    } else if ((end - start === -11 || end - start === -9) && !board[end].piece) {
-      empty(board, end + 10);
-    }
-  }
-
-  board[end] = board[start];
-  empty(board, start);
-}
-
-function findMoveSpace(board, turn, start, capturesOnly, gamestate) {
-  const piece = board[start].piece;
-  const moveSpace = [];
-
-  if (piece === 'pawn') {
-
-    if (board[start].player === 'white') {
-
-      if (!capturesOnly) {
-        if (!board[start + 10].piece) {
-          moveSpace.push(start + 10);
-        }
-        if ((start < 30) && blankSquare(board, start + 10) && blankSquare(board, start + 20)) {
-          moveSpace.push(start + 20);
-        }
-      }
-
-      const pawnMoves = [9, 11];
-      for (const pawnMove of pawnMoves) {
-        const newSpot = start + pawnMove;
-        if (!coords.isCoord(newSpot)) {
-          continue;
-        } else if (blankSquare(board, newSpot)) {
-          continue;
-        } else if (board[newSpot].player === turn[0]) {
-          continue;
-        } else if (board[newSpot].player === turn[1]) {
-          moveSpace.push(newSpot);
-        }
-      }
-
-      // en passant
-
-      const mightBeEnPassants = [-1, 1];
-      for (const mightBeEnPassant of mightBeEnPassants) {
-        const newSpot = start + mightBeEnPassant;
-        if (!coords.isCoord(newSpot)) {
-          continue;
-        } else if ((start > 50 && start < 59) &&
-          (board[newSpot].player === 'brown' && board[newSpot].piece === 'pawn') &&
-          gamestate.enPassantBoard === (newSpot + 20)) {
-          moveSpace.push(newSpot + 10);
-        }
-      }
-    } else if (board[start].player === 'brown') {
-      // starting moves
-      if (!capturesOnly) {
-        if (!board[start - 10].piece) {
-          moveSpace.push(start - 10);
-        }
-        if ((start > 70) && blankSquare(board, start - 10) && blankSquare(board, start - 20)) {
-          moveSpace.push(start - 20);
-        }
-      }
-      // attack moves
-      const pawnMoves = [-9, -11];
-      for (const pawnMove of pawnMoves) {
-        const newSpot = start + pawnMove;
-        if (!coords.isCoord(newSpot)) {
-          continue;
-        } else if (blankSquare(board, newSpot)) {
-          continue;
-        } else if (board[newSpot].player === turn[0]) {
-          continue;
-        } else if (board[newSpot].player === turn[1]) {
-          moveSpace.push(newSpot);
-        }
-      }
-      // en passant
-      const mightBeEnPassants = [-1, 1];
-      for (const mightBeEnPassant of mightBeEnPassants) {
-        const newSpot = start + mightBeEnPassant;
-        if (!coords.isCoord(newSpot)) {
-          continue;
-        } else if ((start > 40 && start < 49) &&
-          (board[newSpot].player === 'white' && board[newSpot].piece === 'pawn') &&
-          gamestate.enPassantWhite === (newSpot - 20)) {
-          moveSpace.push(newSpot - 10);
-        }
-      }
-    }
-  } else if (piece === 'rook') {
-    const rookMoves = [1, -1, 10, -10];
-    for (const rookmove of rookMoves) {
-      for (let multiplier = 1; multiplier < 9; multiplier++) {
-        const newSpot = start + rookmove * multiplier;
-        if (!coords.isCoord(newSpot)) {
-          break;
-        } else if (blankSquare(board, newSpot)) {
-          moveSpace.push(newSpot);
-        } else if (board[newSpot].player === turn[0]) {
-          break;
-        } else if (board[newSpot].player === turn[1]) {
-          moveSpace.push(newSpot);
-          break;
-        }
-      }
-    }
-  } else if (piece === 'knight') {
-    const knightMoves = [21, 12, -21, -12, 8, 19, -8, -19];
-    for (const knightMove of knightMoves) {
-      const newSpot = start + knightMove;
-      if (!coords.isCoord(newSpot)) {
-        continue;
-      } else if (blankSquare(board, newSpot)) {
-        moveSpace.push(newSpot);
-      } else if (board[newSpot].player === turn[0]) {
-        continue;
-      } else if (board[newSpot].player === turn[1]) {
-        moveSpace.push(newSpot);
-      }
-    }
-  } else if (piece === 'bishop') {
-    const bishopMoves = [11, -11, 9, -9];
-    for (const bishopMove of bishopMoves) {
-      for (let multiplier = 1; multiplier < 9; multiplier++) {
-        const newSpot = start + bishopMove * multiplier;
-        if (!coords.isCoord(newSpot)) {
-          break;
-        } else if (blankSquare(board, newSpot)) {
-          moveSpace.push(newSpot);
-        } else if (board[newSpot].player === turn[0]) {
-          break;
-        } else if (board[newSpot].player === turn[1]) {
-          moveSpace.push(newSpot);
-          break;
-        }
-      }
-    }
-  } else if (piece === 'queen') {
-    const queenMoves = [1, -1, 10, -10, 11, -11, 9, -9];
-    for (const queenMove of queenMoves) {
-      for (let multiplier = 1; multiplier < 9; multiplier++) {
-        const newSpot = start + queenMove * multiplier;
-        if (!coords.isCoord(newSpot)) {
-          break;
-        } else if (blankSquare(board, newSpot)) {
-          moveSpace.push(newSpot);
-        } else if (board[newSpot].player === turn[0]) {
-          break;
-        } else if (board[newSpot].player === turn[1]) {
-          moveSpace.push(newSpot);
-          break;
-        }
-      }
-    }
-  } else if (piece === 'king') {
-    const kingMoves = [10, -10, 1, -1, 11, -11, 9, -9];
-
-    for (const kingMove of kingMoves) {
-      const newSpot = start + kingMove;
-      if (!coords.isCoord(newSpot)) {
-        continue;
-      } else if (blankSquare(board, newSpot)) {
-        moveSpace.push(newSpot);
-      } else if (board[newSpot].player === turn[0]) {
-        continue;
-      } else if (board[newSpot].player === turn[1]) {
-        moveSpace.push(newSpot);
-      }
-    }
-
-    // castle
-
-    if (!capturesOnly) {
-      const canCastleKeys = turn === 'wb'
-        ? ['whiteKingCanCastle', 'whiteQueenCanCastle']
-        : ['brownKingCanCastle', 'brownQueenCanCastle'];
-      for (const canCastleKey of canCastleKeys) {
-        if (gamestate[canCastleKey]) {
-          if (canCastleKey === 'whiteKingCanCastle') {
-            moveSpace.push(17);
-          } else if (canCastleKey === 'whiteQueenCanCastle') {
-            moveSpace.push(13);
-          } else if (canCastleKey === 'brownKingCanCastle') {
-            moveSpace.push(87);
-          } else if (canCastleKey === 'brownQueenCanCastle') {
-            moveSpace.push(83);
-          }
-        }
-      }
-    }
-  }
-
-  return moveSpace;
-}
-
-function findEnemyMoveSpace(board, turn, gamestate) {
-  const enemyMoveSpace = new Set();
-  const enemyCoords = [];
-
-  for (const coord of coords) {
-    if (blankSquare(board, coord)) {
-      continue;
-    } else if (board[coord].player === turn[1]) {
-      enemyCoords.push(coord);
-    }
-  }
-
-  for (const enemyCoord of enemyCoords) {
-    const eachMoveSpace = findMoveSpace(board, turn[1] + turn[0], enemyCoord, true, gamestate);
-    for (const move of eachMoveSpace) {
-      enemyMoveSpace.add(move);
-    }
-  }
-  return [...enemyMoveSpace];
-}
-
-function possibleToMove(board, gamestate, turn, start, end) {
-  const potentialBoard = { ...board };
-  movePiece(potentialBoard, start, end);
-  const enemyMoveSpace = findEnemyMoveSpace(potentialBoard, turn, gamestate);
-
-  const coords = new Coords();
-  let kingCoord;
-  for (const coord of coords) {
-    if (potentialBoard[coord].player === turn[0] && potentialBoard[coord].piece === 'k') {
-      kingCoord = coord;
-      break;
-    }
-  }
-
-  for (let i = 0; i < enemyMoveSpace.length; i++) {
-    if (kingCoord === enemyMoveSpace[i]) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-function changeTurn(gamestate) {
-  if (gamestate.turn === 'bw') {
-    gamestate.turnNum++;
-    console.log('Current Turn Number:', gamestate.turnNum); // eslint-disable-line
-    gamestate.enPassantWhite = 0;
-  } else {
-    gamestate.enPassantBrown = 0;
-  }
-  gamestate.nextTurn = gamestate.turn;
-  gamestate.turn = gamestate.turn[1] + gamestate.turn[0];
 }
