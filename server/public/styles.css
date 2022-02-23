@@ -284,7 +284,7 @@ a:hover {
 }
 
 .add-post-btn {
-  background-color: #4e545e;
+  background-color: #3e201a;
   width: 95%;
   height: 60px;
   margin: 1rem auto;
@@ -292,19 +292,7 @@ a:hover {
 }
 
 .add-post-btn:hover {
-  background-color: #1a1c20;
-}
-
-.scroller {
-  background-color: #32363c;
-  border-radius: 5px;
-  height: calc(100vh - 166px);
-  overflow-y: scroll;
-}
-
-.no-games {
-  text-align: center;
-  color: #b5b5b5;
+  background-color: rgb(0, 0, 0);
 }
 
 .post {

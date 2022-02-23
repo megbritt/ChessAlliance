@@ -55,7 +55,7 @@ export default class JoinGame extends React.Component {
 
     const { posts } = this.state;
     const reactPosts = posts.map(post => <Post key={post.gameId} meta={post} />);
-    let noGames = <div className="no-games py-4">There are no games posted...</div>;
+    let noGames = <div className="no-games py-4"></div>;
     if (posts.length !== 0) {
       noGames = null;
     }
