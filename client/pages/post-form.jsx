@@ -56,7 +56,7 @@ export default class PostForm extends React.Component {
       <form className="post-form container page-height" onSubmit={handleSubmit}>
         <div className="row font-24">
           <div className="col d-flex align-items-center">
-            Playing
+            I Play As
             <SideSelectButton type="White" side={side} handleSelect={handleSelect} />
             <SideSelectButton type="Brown" side={side} handleSelect={handleSelect} />
           </div>
@@ -74,7 +74,7 @@ export default class PostForm extends React.Component {
         <div className="row">
           <div className="col d-flex justify-content-end">
             <div className="post-form-buttons d-flex justify-content-between">
-              <a href="#join" className="cancel-btn">Cancel</a>
+              <a href="#join" className="cancel-btn">Back</a>
               <button className="create-post-btn">Create</button>
             </div>
           </div>
