@@ -1,10 +1,8 @@
 import empty from './empty';
 
 export default function movePiece(board, start, end) {
-
   // castling
-
-  if (board[start].piece === 'king') {
+  if (board[start].piece === 'k') {
     if (start === 15 && end === 13) {
       movePiece(board, 11, 14);
     } else if (start === 15 && end === 17) {
@@ -17,7 +15,7 @@ export default function movePiece(board, start, end) {
   }
 
   // en passant
-  if (board[start].piece === 'pawn') {
+  if (board[start].piece === 'p') {
     if ((end - start === 11 || end - start === 9) && !board[end].piece) {
       empty(board, end - 10);
     } else if ((end - start === -11 || end - start === -9) && !board[end].piece) {
@@ -25,4 +23,7 @@ export default function movePiece(board, start, end) {
     }
   }
 
+  // basic move piece
+  board[end] = board[start];
+  empty(board, start);
 }

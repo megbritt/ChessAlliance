@@ -1,4 +1,4 @@
-insert into "games" ("message", "playerName", "playerSide", "opponentSide", "resolved")
-values ('play me', 'Anonymous', 'brown', 'white', FALSE),
-       ('pros only','starkkid753', 'white', 'brown', FALSE)
+insert into "users" ("username", "hashedPassword")
+values ('Anonymous', '$argon2i$v=19$m=4096,t=3,p=1$fXkHPjxT6IK9v4B24KSg5g$7l5Z1ToiLwwznekaFDcfGFqhESXHskA5nuDvxPXLJ78'),
+       ('demo', '$argon2i$v=19$m=4096,t=3,p=1$l9mGKtyofrl4GxF5xuI2KQ$eTxyN2L+0l4OFDxnyY1uoUl+NFPC7mB/jjwVqr7QTJQ')
 returning *;

@@ -1,21 +1,28 @@
 import React from 'react';
 import Header from './components/header';
-import NavigationBar from './components/navigation-bar';
+import Nav from './components/nav';
 import Home from './pages/home';
 import JoinGame from './pages/join-game';
-import parseRoute from './lib/parse-route';
 import PostForm from './pages/post-form';
 import Game from './pages/game';
-import RouteContext from './lib/route-context';
+import parseRoute from './lib/parse-route';
+import GlobalContext from './lib/global-context';
+import decodeToken from './lib/decode-token';
+import SignUp from './pages/sign-up';
+import SignIn from './pages/sign-in';
+import Local from './pages/local';
 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      navBarShowing: false,
-      route: parseRoute(window.location.hash)
+      navOpen: false,
+      route: parseRoute(window.location.hash),
+      user: null
     };
-    this.handleNavBar = this.handleNavBar.bind(this);
+    this.handleClickNav = this.handleClickNav.bind(this);
+    this.handleSignIn = this.handleSignIn.bind(this);
+    this.handleSignOut = this.handleSignOut.bind(this);
     this.renderPage = this.renderPage.bind(this);
   }
 
@@ -23,42 +30,77 @@ export default class App extends React.Component {
     window.addEventListener('hashchange', () => {
       this.setState({ route: parseRoute(window.location.hash) });
     });
+
+    const token = window.localStorage.getItem('chess-app-jwt');
+    const user = token ? decodeToken(token) : { username: 'Anonymous' };
+    this.setState({ user });
   }
 
-  handleNavBar() {
-    if (this.state.navBarShowing) {
-      this.setState({ navBarShowing: false });
+  handleClickNav() {
+    if (this.state.navOpen) {
+      this.setState({ navOpen: false });
     } else {
-      this.setState({ navBarShowing: true });
+      this.setState({ navOpen: true });
     }
+  }
+
+  handleSignIn(result) {
+    const { user, token } = result;
+    window.localStorage.setItem('chess-app-jwt', token);
+    this.setState({ user });
+    window.location.hash = '#home';
+  }
+
+  handleSignOut() {
+    window.localStorage.removeItem('chess-app-jwt');
+    this.setState({ user: { username: 'Anonymous' } });
+    this.handleClickNav();
+    window.location.hash = '#home';
   }
 
   renderPage() {
     switch (this.state.route.path) {
       case 'home':
         return <Home />;
+      case 'local':
+        return <Local />;
       case 'join':
         return <JoinGame />;
       case 'post':
         return <PostForm />;
       case 'game':
         return <Game />;
+      case 'sign-up':
+        return <SignUp />;
+      case 'sign-in':
+        return <SignIn />;
       default:
         window.location.hash = '#home';
     }
   }
 
   render() {
-    const { navBarShowing } = this.state;
-    const { handleNavBar } = this;
+    if (!this.state.user) {
+      return null;
+    }
+
+    const { navOpen, route, user } = this.state;
+    const { handleClickNav, handleSignIn, handleSignOut } = this;
+    const contextValue = {
+      route,
+      user,
+      handleClickNav,
+      handleSignIn,
+      handleSignOut
+    };
     return (
-      <RouteContext.Provider value={this.state.route}>
+      <GlobalContext.Provider value={contextValue}>
         <>
-          <Header navBarShowing={navBarShowing} handleNavBar={handleNavBar} />
-          <NavigationBar navBarShowing={navBarShowing} handleNavBar={handleNavBar} />
+          <Header navOpen={navOpen} handleClickNav={handleClickNav} />
+          <Nav navOpen={navOpen} />
           {this.renderPage()}
         </>
-      </RouteContext.Provider>
+      </GlobalContext.Provider>
     );
   }
 }

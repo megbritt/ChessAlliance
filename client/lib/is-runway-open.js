@@ -1,4 +1,4 @@
-import blankSquare from './blank-square';
+import isEmptyAt from './is-empty-at';
 import findEnemyMoveSpace from './find-enemy-move-space';
 
 export default function isRunwayOpen(board, region, gamestate) {
@@ -22,7 +22,7 @@ export default function isRunwayOpen(board, region, gamestate) {
   }
 
   for (const coord of runway) {
-    if (!blankSquare(board, coord)) {
+    if (!isEmptyAt(board, coord)) {
       return false;
     }
   }

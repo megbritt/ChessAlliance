@@ -1,3 +1,5 @@
+import clone from 'rfdc';
+
 export default function copy(obj) {
-  return { ...obj };
+  return clone()(obj);
 }
