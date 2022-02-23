@@ -7,7 +7,7 @@ export default class Header extends React.Component {
     return (
       <div className="header container-fluid">
         <button className={hamburgerClass} onClick={handleClickNav}>
-          <img src="images/hamburger-menu.svg" />
+          <img src="images/three-stripes.png" />
         </button>
         <img className="avatar" src="images/default-avatar.png" />
       </div>
