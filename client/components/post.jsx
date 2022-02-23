@@ -32,7 +32,7 @@ export default class Post extends React.Component {
   render() {
     const { meta } = this.props;
     const side = meta.playerSide === 'white'
-      ? 'black'
+      ? 'brown'
       : 'white';
     const board = new Board();
     return (

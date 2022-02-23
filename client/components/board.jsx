@@ -43,7 +43,7 @@ export default function Board(props) {
       const description = piece.player + piece.piece;
       const pieceId = piece.pieceId;
       let [row, col] = coord.toString();
-      if (side === 'black') {
+      if (side === 'brown') {
         row = 9 - row;
         col = 9 - col;
       }

@@ -12,14 +12,14 @@ export default function updateCastling(gamestate, runway, runwayOpen) {
     canCastleKey = 'whiteQueenCanCastle';
   } else if (runway === 'bk') {
     turn = 'bw';
-    kingMovedKey = 'blackKingMoved';
-    rookMovedKey = 'blackKingRookMoved';
-    canCastleKey = 'blackKingCanCastle';
+    kingMovedKey = 'brownKingMoved';
+    rookMovedKey = 'brownKingRookMoved';
+    canCastleKey = 'brownKingCanCastle';
   } else if (runway === 'bq') {
     turn = 'bw';
-    kingMovedKey = 'blackKingMoved';
-    rookMovedKey = 'blackQueenRookMoved';
-    canCastleKey = 'blackQueenCanCastle';
+    kingMovedKey = 'brownKingMoved';
+    rookMovedKey = 'brownQueenRookMoved';
+    canCastleKey = 'brownQueenCanCastle';
   }
 
   if (runwayOpen && !gamestate[kingMovedKey] && !gamestate[rookMovedKey] && !gamestate.check[turn]) {

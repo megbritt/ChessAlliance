@@ -16,16 +16,16 @@ export default class GameState {
     this.whiteQueenRookMoved = false;
     this.whiteKingRookMoved = false;
 
-    this.blackQueenCanCastle = false;
-    this.blackKingCanCastle = false;
-    this.blackKingMoved = false;
-    this.blackQueenRookMoved = false;
-    this.blackKingRookMoved = false;
+    this.brownQueenCanCastle = false;
+    this.brownKingCanCastle = false;
+    this.brownKingMoved = false;
+    this.brownQueenRookMoved = false;
+    this.brownKingRookMoved = false;
 
     this.promoting = null;
 
     this.enPassantWhite = 0;
-    this.enPassantBlack = 0;
+    this.enPassantBrown = 0;
 
     this.draw = false;
     this.pawnOrKillCounter = 0;

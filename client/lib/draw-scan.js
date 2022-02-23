@@ -63,15 +63,15 @@ export default function drawScan(board, gamestate) {
   }
 
   // insufficient material draw
-  // list all black and white squares
-  const blackSquares = [];
+  // list all brown and white squares
+  const brownSquares = [];
   const whiteSquares = [];
   for (const coord of coords) {
     const tens = Math.floor(coord / 10);
     const ones = coord % 10;
     if ((tens % 2) === 0) {
       if ((ones % 2) === 0) {
-        blackSquares.push(coord);
+        brownSquares.push(coord);
       } else {
         whiteSquares.push(coord);
       }
@@ -79,22 +79,22 @@ export default function drawScan(board, gamestate) {
       if ((ones % 2) === 0) {
         whiteSquares.push(coord);
       } else {
-        blackSquares.push(coord);
+        brownSquares.push(coord);
       }
     }
   }
   // find remaining pieces
   const whitePieces = [];
-  const blackPieces = [];
+  const brownPieces = [];
   for (const coord of coords) {
     if (board[coord].player === 'w') {
       whitePieces.push(board[coord].piece);
     } else if (board[coord].player === 'b') {
-      blackPieces.push(board[coord].piece);
+      brownPieces.push(board[coord].piece);
     }
   }
   // cases
-  if (blackPieces.length === 1) {
+  if (brownPieces.length === 1) {
     if (whitePieces.length === 1) {
       gamestate.drawCase = 'insufficient materials';
       gamestate.draw = true;
@@ -105,24 +105,24 @@ export default function drawScan(board, gamestate) {
       }
     }
   } else if (whitePieces.length === 1) {
-    if (blackPieces.length === 1) {
+    if (brownPieces.length === 1) {
       gamestate.drawCase = 'insufficient materials';
       gamestate.draw = true;
-    } else if (blackPieces.length === 2) {
-      if (blackPieces.includes('b') || blackPieces.includes('n')) {
+    } else if (brownPieces.length === 2) {
+      if (brownPieces.includes('b') || brownPieces.includes('n')) {
         gamestate.drawCase = 'insufficient materials';
         gamestate.draw = true;
       }
     }
-  } else if (blackPieces.length === 2 && whitePieces.length === 2) {
-    if (blackPieces.includes('b') && whitePieces.includes('b')) {
+  } else if (brownPieces.length === 2 && whitePieces.length === 2) {
+    if (brownPieces.includes('b') && whitePieces.includes('b')) {
       const bishopCoords = [];
       for (const coord of coords) {
         if (board[coord].piece === 'b') {
           bishopCoords.push(coord);
         }
       }
-      if (blackSquares.includes(bishopCoords[0]) && blackSquares.includes(bishopCoords[1])) {
+      if (brownSquares.includes(bishopCoords[0]) && brownSquares.includes(bishopCoords[1])) {
         gamestate.drawCase = 'insufficient materials';
         gamestate.draw = true;
       } else if (whitePieces.includes(bishopCoords[0]) && whitePieces.includes(bishopCoords[1])) {

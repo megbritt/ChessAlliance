@@ -40,7 +40,7 @@ export default function findMoveSpace(board, turn, start, killsOnly, gamestate) 
           continue;
         } else if ((start > 50 && start < 59) &&
           (board[newSpot].player === 'b' && board[newSpot].piece === 'p') &&
-          gamestate.enPassantBlack === (newSpot + 20)) {
+          gamestate.enPassantBrown === (newSpot + 20)) {
           moveSpace.push(newSpot + 10);
         }
       }
@@ -167,16 +167,16 @@ export default function findMoveSpace(board, turn, start, killsOnly, gamestate) 
     if (!killsOnly) {
       const canCastleKeys = turn === 'wb'
         ? ['whiteKingCanCastle', 'whiteQueenCanCastle']
-        : ['blackKingCanCastle', 'blackQueenCanCastle'];
+        : ['brownKingCanCastle', 'brownQueenCanCastle'];
       for (const canCastleKey of canCastleKeys) {
         if (gamestate[canCastleKey]) {
           if (canCastleKey === 'whiteKingCanCastle') {
             moveSpace.push(17);
           } else if (canCastleKey === 'whiteQueenCanCastle') {
             moveSpace.push(13);
-          } else if (canCastleKey === 'blackKingCanCastle') {
+          } else if (canCastleKey === 'brownKingCanCastle') {
             moveSpace.push(87);
-          } else if (canCastleKey === 'blackQueenCanCastle') {
+          } else if (canCastleKey === 'brownQueenCanCastle') {
             moveSpace.push(83);
           }
         }

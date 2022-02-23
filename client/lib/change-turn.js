@@ -3,7 +3,7 @@ export default function changeTurn(gamestate, reverse = false) {
     gamestate.turnNum++;
     gamestate.enPassantWhite = 0;
   } else {
-    gamestate.enPassantBlack = 0;
+    gamestate.enPassantBrown = 0;
     if (reverse) {
       gamestate.turnNum--;
     }

@@ -17,8 +17,8 @@ export default class PostForm extends React.Component {
   handleSelect(event) {
     if (event.target.classList.contains('white')) {
       this.setState({ side: 'White' });
-    } else if (event.target.classList.contains('black')) {
-      this.setState({ side: 'Black' });
+    } else if (event.target.classList.contains('brown')) {
+      this.setState({ side: 'Brown' });
     }
   }
 
@@ -58,7 +58,7 @@ export default class PostForm extends React.Component {
           <div className="col d-flex align-items-center">
             Playing
             <SideSelectButton type="White" side={side} handleSelect={handleSelect} />
-            <SideSelectButton type="Black" side={side} handleSelect={handleSelect} />
+            <SideSelectButton type="Brown" side={side} handleSelect={handleSelect} />
           </div>
         </div>
 

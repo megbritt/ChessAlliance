@@ -35,7 +35,7 @@ export default class Game extends React.Component {
       selected: 0,
       highlighted: [],
       whiteDead: [],
-      blackDead: [],
+      brownDead: [],
       showCheck: 0,
       showCheckmate: 0,
       showDraw: 0,
@@ -64,11 +64,11 @@ export default class Game extends React.Component {
     const { socket } = this;
     socket.on('room joined', payload => {
       const { meta, moves } = payload;
-      const { board, gamestate, whiteDead, blackDead } = this.state;
+      const { board, gamestate, whiteDead, brownDead } = this.state;
       const nextBoard = copy(board);
       const nextGamestate = copy(gamestate);
       const nextWhiteDead = whiteDead;
-      const nextBlackDead = blackDead;
+      const nextBrownDead = brownDead;
       if (this.state.meta) {
         if (this.state.meta.opponentName) {
           return;
@@ -84,7 +84,7 @@ export default class Game extends React.Component {
             if (killed[0] === 'w') {
               nextWhiteDead.push(killed);
             } else {
-              nextBlackDead.push(killed);
+              nextBrownDead.push(killed);
             }
           }
           // promote any pawns
@@ -120,12 +120,12 @@ export default class Game extends React.Component {
         board: nextBoard,
         gamestate: nextGamestate,
         whiteDead: nextWhiteDead,
-        blackDead: nextBlackDead
+        brownDead: nextBrownDead
       });
     });
 
     socket.on('move made', move => {
-      const { board, gamestate, whiteDead, blackDead } = this.state;
+      const { board, gamestate, whiteDead, brownDead } = this.state;
       const { start, end, promotion } = move;
       if (!board[start].piece) {
         return;
@@ -135,7 +135,7 @@ export default class Game extends React.Component {
       const nextGamestate = copy(gamestate);
       const killed = this.executeMove(nextBoard, nextGamestate, start, end);
       const nextWhiteDead = whiteDead;
-      const nextBlackDead = blackDead;
+      const nextBrownDead = brownDead;
       let phase = 'selecting';
       let showCheck = 0;
       let showCheckmate = 0;
@@ -145,7 +145,7 @@ export default class Game extends React.Component {
         if (killed[0] === 'w') {
           nextWhiteDead.push(killed);
         } else {
-          nextBlackDead.push(killed);
+          nextBrownDead.push(killed);
         }
       }
       // promote any pawns
@@ -178,7 +178,7 @@ export default class Game extends React.Component {
         gamestate: nextGamestate,
         phase,
         whiteDead: nextWhiteDead,
-        blackDead: nextBlackDead,
+        brownDead: nextBrownDead,
         showCheck,
         showCheckmate,
         showDraw
@@ -269,7 +269,7 @@ export default class Game extends React.Component {
   }
 
   decideMove(end) {
-    const { board, gamestate, highlighted, selected, whiteDead, blackDead } = this.state;
+    const { board, gamestate, highlighted, selected, whiteDead, brownDead } = this.state;
     if (!highlighted.includes(end)) {
       this.setState({
         phase: 'selecting',
@@ -285,14 +285,14 @@ export default class Game extends React.Component {
 
     const killed = this.executeMove(nextBoard, nextGamestate, selected, end);
     const nextWhiteDead = whiteDead;
-    const nextBlackDead = blackDead;
+    const nextBrownDead = brownDead;
 
     // add dead pieces to player palette
     if (killed) {
       if (killed[0] === 'w') {
         nextWhiteDead.push(killed);
       } else {
-        nextBlackDead.push(killed);
+        nextBrownDead.push(killed);
       }
     }
 
@@ -308,7 +308,7 @@ export default class Game extends React.Component {
       selected: 0,
       highlighted: [],
       whiteDead: nextWhiteDead,
-      blackDead: nextBlackDead
+      brownDead: nextBrownDead
     });
 
     if (!nextGamestate.promoting) {
@@ -326,8 +326,8 @@ export default class Game extends React.Component {
     } else if (board[start].piece === 'p') {
       gamestate.pawnOrKillCounter = 0;
       // add en passant kills
-      if (board[start].player === 'w' && gamestate.enPassantBlack) {
-        if (end === gamestate.enPassantBlack - 10) {
+      if (board[start].player === 'w' && gamestate.enPassantBrown) {
+        if (end === gamestate.enPassantBrown - 10) {
           killed = 'bp';
         }
       } else if (board[start].player === 'b' && gamestate.enPassantWhite) {
@@ -343,7 +343,7 @@ export default class Game extends React.Component {
     if (board[start].piece === 'p' && (start > 20 && start < 29) && (end > 40 && end < 49)) {
       gamestate.enPassantWhite = start;
     } else if (board[start].piece === 'p' && (start > 70 && start < 79) && (end > 50 && end < 59)) {
-      gamestate.enPassantBlack = start;
+      gamestate.enPassantBrown = start;
     }
 
     // move piece
@@ -409,7 +409,7 @@ export default class Game extends React.Component {
             if (gamestate.turn === 'bw') {
               winner = 'white';
             } else {
-              winner = 'black';
+              winner = 'brown';
             }
           }
           const body = { winner };
@@ -492,10 +492,10 @@ export default class Game extends React.Component {
       return null;
     }
     const { board, meta, side, postGameOpen, selected, highlighted, phase } = this.state;
-    const { whiteDead, blackDead, showCheck, showCheckmate, showDraw, showForfeit } = this.state;
+    const { whiteDead, brownDead, showCheck, showCheckmate, showDraw, showForfeit } = this.state;
     const { handleClick, cancelGame, promotePawn, openPostGame, closePostGame, socket } = this;
-    const playerDead = side === 'white' ? whiteDead : blackDead;
-    const opponentDead = side === 'white' ? blackDead : whiteDead;
+    const playerDead = side === 'white' ? whiteDead : brownDead;
+    const opponentDead = side === 'white' ? brownDead : whiteDead;
     const promoteFunc = phase === 'promoting' ? promotePawn : null;
 
     let player = { username: meta.playerName };
