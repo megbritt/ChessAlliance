@@ -111,22 +111,16 @@ function Resolution(props) {
   if (resolution === 'win') {
     text = (
       <>
-        <img className="trophy mx-2" src="images/trophy.svg" />
-        {'You won!!'}
-        <img className="trophy mx-2" src="images/trophy.svg" />
+        <img className="trophy" src="images/trophy.png" />
+        {'You Won!'}
       </>
     );
   } else if (resolution === 'lose') {
-    text = 'You lost...';
+    text = 'Opponent Won';
   } else if (resolution === 'draw') {
-    text = 'Draw!';
-  } else if (resolution === 'undecided') {
-    text = (
-      <p className="post-game-message p-2">
-        Leaving the game will forfeit the match.  Are you sure you want to leave?
-      </p>
-    );
+    text = 'Draw';
   }
+
   return (
     <div className="resolution mt-5">
       {text}

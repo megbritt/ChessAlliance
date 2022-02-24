@@ -456,7 +456,7 @@ a:hover {
 }
 
 .banner {
-  background-color: #4e545e;
+  background-color: #000;
   color: #eaecee;
   width: calc(100% - 4px);
   height: 10%;
@@ -472,7 +472,6 @@ a:hover {
   align-items: center;
   opacity: 0%;
   pointer-events: none;
-  box-shadow: 0 4px 4px 2px rgba(0, 0, 0, 0.7);
 }
 
 .banner.show {
