@@ -3,8 +3,6 @@ export default class GameState {
     this.turn = 'wb';
     this.nextTurn = 'bw';
     this.turnNum = 1;
-    this.seeingOptions = false;
-    this.start = 0;
 
     this.check = {
       wb: false,
@@ -27,12 +25,12 @@ export default class GameState {
     this.promoting = null;
 
     this.enPassantWhite = 0;
-    this.enPassantBlack = 0;
+    this.enPassantBrown = 0;
 
     this.draw = false;
+    this.pawnOrKillCounter = 0;
     this.drawCase = null;
     this.pastBoards = [];
     this.pawnKingMoveCounter = 0;
   }
-
 }

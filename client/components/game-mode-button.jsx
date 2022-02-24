@@ -2,9 +2,9 @@ import React from 'react';
 
 export default function GameModeButton(props) {
   const { type } = props;
-  const text = type === 's' ? 'Singleplayer' : 'Multiplayer';
-  const href = type === 's' ? '#singleplayer' : '#join';
+  const text = type === 's' ? 'Local' : 'Multiplayer';
+  const href = type === 's' ? '#local' : '#join';
   return (
-    <a href={href} className="gamemode">{text}</a>
+    <a href={href} className="gamemode my-4">{text}</a>
   );
 }

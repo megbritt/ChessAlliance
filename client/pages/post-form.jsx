@@ -1,5 +1,6 @@
 import React from 'react';
 import SideSelectButton from '../components/side-select-button';
+import GlobalContext from '../lib/global-context';
 
 export default class PostForm extends React.Component {
   constructor(props) {
@@ -27,9 +28,10 @@ export default class PostForm extends React.Component {
 
   handleSubmit(event) {
     event.preventDefault();
+    const { user } = this.context;
 
     const body = {
-      playerName: 'Anonymous',
+      playerName: user.username,
       playerSide: this.state.side.toLowerCase(),
       message: this.state.message
     };
@@ -63,7 +65,7 @@ export default class PostForm extends React.Component {
         <div className="row">
           <div className="col post-message-div">
             <label className="w-100">
-              <p className="message-title">Message:</p>
+              <p className="post-message-title">Message</p>
               <textarea className="post-message" value={message} onChange={handleMessage} />
             </label>
           </div>
@@ -72,7 +74,7 @@ export default class PostForm extends React.Component {
         <div className="row">
           <div className="col d-flex justify-content-end">
             <div className="post-form-buttons d-flex justify-content-between">
-              <a href="#join" className="back-btn">Back</a>
+              <a href="#join" className="cancel-btn">Back</a>
               <button className="create-post-btn">Create</button>
             </div>
           </div>
@@ -81,3 +83,5 @@ export default class PostForm extends React.Component {
     );
   }
 }
+
+PostForm.contextType = GlobalContext;

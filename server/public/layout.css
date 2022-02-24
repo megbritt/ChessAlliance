@@ -1,0 +1,67 @@
+.hidden {
+  display: none;
+}
+
+.board-row-8 {
+  top: calc(2px + calc(100% - 4px) / 8 * 0);
+}
+
+.board-row-7 {
+  top: calc(2px + calc(100% - 4px) / 8 * 1);
+}
+
+.board-row-6 {
+  top: calc(2px + calc(100% - 4px) / 8 * 2);
+}
+
+.board-row-5 {
+  top: calc(2px + calc(100% - 4px) / 8 * 3);
+}
+
+.board-row-4 {
+  top: calc(2px + calc(100% - 4px) / 8 * 4);
+}
+
+.board-row-3 {
+  top: calc(2px + calc(100% - 4px) / 8 * 5);
+}
+
+.board-row-2 {
+  top: calc(2px + calc(100% - 4px) / 8 * 6);
+}
+
+.board-row-1 {
+  top: calc(2px + calc(100% - 4px) / 8 * 7);
+}
+
+.board-col-1 {
+  left: calc(2px + calc(100% - 4px) / 8 * 0);
+}
+
+.board-col-2 {
+  left: calc(2px + calc(100% - 4px) / 8 * 1);
+}
+
+.board-col-3 {
+  left: calc(2px + calc(100% - 4px) / 8 * 2);
+}
+
+.board-col-4 {
+  left: calc(2px + calc(100% - 4px) / 8 * 3);
+}
+
+.board-col-5 {
+  left: calc(2px + calc(100% - 4px) / 8 * 4);
+}
+
+.board-col-6 {
+  left: calc(2px + calc(100% - 4px) / 8 * 5);
+}
+
+.board-col-7 {
+  left: calc(2px + calc(100% - 4px) / 8 * 6);
+}
+
+.board-col-8 {
+  left: calc(2px + calc(100% - 4px) / 8 * 7);
+}
