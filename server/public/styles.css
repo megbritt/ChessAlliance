@@ -544,8 +544,8 @@ a:hover {
 }
 
 .post-game {
-  background-color: #eaecee;
-  color: #32363c;
+  background-color: #250707;
+  color: #ffff;
   z-index: 5;
   padding: 2rem 0.75rem;
 }

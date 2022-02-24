@@ -40,16 +40,16 @@ export default class PostGame extends React.Component {
 
     const exitText = resolution === 'undecided' ? 'Leave' : 'Exit';
 
-    let postGameClass = 'post-game page-height';
+    let postGameClass = 'post-game page-height bg-black';
     if (media === 'small') {
       postGameClass += ' small w-100 d-block d-sm-none';
     } else if (media === 'large') {
-      postGameClass += ' large w-375 d-none d-sm-block';
+      postGameClass += 'large w-375 d-none d-sm-block';
     }
 
     return (
       <div className={postGameClass}>
-        <div className="row">
+        <div className="row bg-black">
           <div className="d-flex align-items-center my-2">
             <Player player={player} win={resolution === 'win'} />
           </div>
