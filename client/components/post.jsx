@@ -37,7 +37,7 @@ export default class Post extends React.Component {
     const board = new Board();
     return (
       <div className="post cursor-pointer p-2" onClick={this.handleSelect}>
-        <div className="row">
+        <div className="row bg-black">
           <div className="col-4">
             <div className="post-board-container">
               <ReactBoard board={board} highlighted={[]} selected={0} side={side} />

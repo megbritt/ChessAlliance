@@ -305,7 +305,7 @@ a:hover {
 }
 
 .post:hover {
-  border: solid 5px #956a43;
+  background-color: #956a43;
 }
 
 .post-board-container {
@@ -618,4 +618,8 @@ a:hover {
 
 .exit-btn:hover {
   background-color: #df2929;
+}
+
+.bg-black {
+  background-color: black;
 }

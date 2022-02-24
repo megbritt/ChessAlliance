@@ -70,7 +70,7 @@ export default class JoinGame extends React.Component {
 
         <div className="row">
           <div className="col">
-            <div className="scroller px-1 py-2">
+            <div className="px-1 py-2">
               {noGames}
               {reactPosts}
             </div>
