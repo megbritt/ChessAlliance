@@ -3,6 +3,8 @@ const express = require('express');
 const pg = require('pg');
 const http = require('http');
 const { Server } = require('socket.io');
+const argon2 = require('argon2');
+const jwt = require('jsonwebtoken');
 const errorMiddleware = require('./error-middleware');
 const staticMiddleware = require('./static-middleware');
 const ClientError = require('./client-error');
@@ -51,8 +53,6 @@ io.on('connection', socket => {
     db.query(sql, params)
       .then(result => {
         const meta = result.rows[0];
-        io.to('lobby').emit('game joined', meta);
-
         const payload = {};
         payload.meta = meta;
         if (!meta.opponentName) {
@@ -68,6 +68,7 @@ io.on('connection', socket => {
           db.query(sql, params)
             .then(result => {
               payload.moves = result.rows;
+              io.to('lobby').emit('remove post', meta);
               io.to(gameId).emit('room joined', payload);
             })
             .catch(err => console.error(err));
@@ -149,7 +150,7 @@ app.post('/api/games', (req, res, next) => {
   if (!playerName || !playerSide || (!message && message !== '')) {
     throw new ClientError(400, 'missing required field');
   }
-  const opponentSide = playerSide === 'white' ? 'black' : 'white';
+  const opponentSide = playerSide === 'white' ? 'brown' : 'white';
   const sql = `
   insert into "games" ("message", "playerName", "playerSide", "opponentSide")
   values ($1, $2, $3, $4)
@@ -158,7 +159,9 @@ app.post('/api/games', (req, res, next) => {
   const params = [message, playerName, playerSide, opponentSide];
   db.query(sql, params)
     .then(result => {
-      res.json(result.rows[0]);
+      const [meta] = result.rows;
+      io.to('lobby').emit('add post', meta);
+      res.status(201).json(meta);
     })
     .catch(err => next(err));
 });
@@ -220,14 +223,73 @@ app.post('/api/moves/:gameId', (req, res, next) => {
       }
       const move = result.rows[0];
       io.to(gameId).emit('move made', move);
-      res.json(move);
+      res.status(201).json(move);
+    })
+    .catch(err => next(err));
+});
+
+app.post('/api/auth/sign-up', (req, res, next) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    throw new ClientError(400, 'username and password are required fields');
+  }
+
+  argon2
+    .hash(password)
+    .then(hashedPassword => {
+      const sql = `
+      insert into "users" ("username", "hashedPassword")
+      values ($1, $2)
+      on conflict ("username") do nothing
+      returning "userId", "username", "createdAt"
+      `;
+      const params = [username, hashedPassword];
+      return db.query(sql, params);
+    })
+    .then(result => {
+      const [user] = result.rows;
+      const status = user ? 201 : 204;
+      res.status(status).json(user);
+    })
+    .catch(err => next(err));
+});
+
+app.post('/api/auth/sign-in', (req, res, next) => {
+  const { username, password } = req.body;
+  if (!username || !password) {
+    throw new ClientError(401, 'invalid login');
+  }
+
+  const sql = `
+  select "userId",
+         "hashedPassword"
+    from "users"
+   where "username" = $1
+  `;
+  const params = [username];
+  db.query(sql, params)
+    .then(result => {
+      if (!result.rows[0]) {
+        throw new ClientError(401, 'invalid login');
+      }
+      const { userId, hashedPassword } = result.rows[0];
+      return argon2
+        .verify(hashedPassword, password)
+        .then(isMatching => {
+          if (!isMatching) {
+            throw new ClientError(401, 'invalid login');
+          }
+          const user = { userId, username };
+          const token = jwt.sign(user, process.env.TOKEN_SECRET);
+          res.json({ token, user: user });
+        });
     })
     .catch(err => next(err));
 });
 
 app.put('/api/games/:gameId', (req, res, next) => {
   const { winner } = req.body;
-  const resolutions = ['white', 'black', 'draw'];
+  const resolutions = ['white', 'brown', 'draw'];
   if (!winner) {
     throw new ClientError(400, 'missing required field');
   }
@@ -275,7 +337,9 @@ app.delete('/api/games/:gameId', (req, res, next) => {
       if (result.rows.length === 0) {
         throw new ClientError(404, 'no such gameId exists');
       }
-      res.json(result.rows[0]);
+      const [meta] = result.rows;
+      io.to('lobby').emit('remove post', meta);
+      res.json(meta);
     })
     .catch(err => next(err));
 });

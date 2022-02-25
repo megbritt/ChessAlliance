@@ -13,8 +13,8 @@ export default function PlayerPalette(props) {
 
   if (props.promote) {
     const whiteChoices = ['wq', 'wb', 'wn', 'wr'];
-    const blackeChoices = ['bq', 'bb', 'bn', 'br'];
-    const choices = props.player.side === 'white' ? whiteChoices : blackeChoices;
+    const brownChoices = ['bq', 'bb', 'bn', 'br'];
+    const choices = props.player.side === 'white' ? whiteChoices : brownChoices;
     return (
       <div
         className="player-palette p-3">
@@ -25,7 +25,7 @@ export default function PlayerPalette(props) {
               <img
                 key={choice}
                 id={choice[1]}
-                src={`/images/${choice}.svg`}
+                src={`/images/${choice}.png`}
                 className="promotion chess-piece m-1"
                 onClick={props.promote} />
             );
@@ -35,12 +35,12 @@ export default function PlayerPalette(props) {
     );
   }
 
-  const { player, dead, exitAction } = props;
+  const { player, dead } = props;
   const deadPieces = dead.map((piece, index) => {
-    return <img key={index} src={`/images/${piece}.svg`} className="dead chess-piece m-1" />;
+    return <img key={index} src={`/images/${piece}.png`} className="dead chess-piece m-1" />;
   });
   return (
-    <div className="player-palette container">
+    <div className="player-palette container px-3">
       <div className="row">
         <div className="col px-0">
           <div className="d-flex align-items-center">
@@ -52,12 +52,6 @@ export default function PlayerPalette(props) {
             {deadPieces}
           </div>
         </div>
-
-        {exitAction && (
-          <div className="col d-flex flex-column justify-content-start align-items-end p-1">
-            <img src="/images/exit-button.svg" onClick={exitAction} />
-          </div>
-        )}
       </div>
     </div>
   );
