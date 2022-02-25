@@ -91,16 +91,9 @@ function Player(props) {
   if (!player) {
     player = { username: 'Anonymous' };
   }
-  const avatarStyle = {
-    backgroundImage: 'url(images/default-avatar.png)'
-  };
-  const trophy = <img className="trophy mx-2" src="images/trophy.svg" />;
   return (
     <>
-      <div className="dot gray mx-1" />
-      <div className="avatar mx-2" style={avatarStyle} />
-      <span className="font-24">{player.username}</span>
-      {win && trophy}
+      { win }
     </>
   );
 }
