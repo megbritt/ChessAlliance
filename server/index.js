@@ -23,6 +23,26 @@ io.on('connection', socket => {
 
   if (gameId) {
     socket.join(gameId);
+
+    socket.on('forfeit', () => {
+      const sql = `
+      select *
+        from "games"
+      where "gameId" = $1
+      `;
+      const params = [gameId];
+      db.query(sql, params)
+        .then(res => res.json())
+        .then(result => {
+          if (result.rows.length === 0) {
+            throw new ClientError(404, 'no such gameId exists');
+          }
+          const meta = result.rows[0];
+          socket.broadcast.to(gameId).emit('forfeit', meta);
+        })
+        .catch(err => console.error(err));
+    });
+
     const sql = `
     select *
       from "games"
@@ -32,8 +52,27 @@ io.on('connection', socket => {
     db.query(sql, params)
       .then(result => {
         const meta = result.rows[0];
-        io.to(gameId).emit('room joined', meta);
         io.to('lobby').emit('game joined', meta);
+
+        const payload = {};
+        payload.meta = meta;
+        if (!meta.opponentName) {
+          io.to(gameId).emit('room joined', payload);
+        } else {
+          const sql = `
+          select *
+            from "moves"
+          where "gameId" = $1
+          order by "moveId"
+          `;
+          const params = [gameId];
+          db.query(sql, params)
+            .then(result => {
+              payload.moves = result.rows;
+              io.to(gameId).emit('room joined', payload);
+            })
+            .catch(err => console.error(err));
+        }
       })
       .catch(err => {
         console.error(err);
@@ -45,9 +84,6 @@ io.on('connection', socket => {
     socket.join('lobby');
   });
 
-  socket.on('forfeit', () => {
-    socket.broadcast.to(gameId).emit('forfeit');
-  });
 });
 
 app.use(express.json());

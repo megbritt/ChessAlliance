@@ -4,11 +4,11 @@ import ReactBoard from '../components/board';
 import PlayerPalette from '../components/player-palette';
 import Banner from '../components/banner';
 import PostGame from '../components/post-game';
-import GlobalContext from '../lib/global-context';
-import PostGameContext from '../lib/post-game-context';
-
 import Board from '../lib/board';
 import GameState from '../lib/gamestate';
+import RouteContext from '../lib/route-context';
+import PostGameContext from '../lib/post-game-context';
+
 import copy from '../lib/copy';
 import isEmptyAt from '../lib/is-empty-at';
 import isViableMove from '../lib/is-viable-move';
@@ -31,15 +31,14 @@ export default class Game extends React.Component {
       postGameOpen: false,
       board: new Board(),
       gamestate: new GameState(),
-      phase: 'pending',
+      phase: 'selecting',
       selected: 0,
       highlighted: [],
       whiteDead: [],
-      brownDead: [],
+      blackDead: [],
       showCheck: 0,
       showCheckmate: 0,
-      showDraw: 0,
-      showForfeit: 0
+      showDraw: 0
     };
     this.cancelGame = this.cancelGame.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -55,20 +54,18 @@ export default class Game extends React.Component {
   }
 
   componentDidMount() {
-    const { route } = this.context;
-    const { params } = route;
+    const { params } = this.context;
     const gameId = params.get('gameId');
     const side = params.get('side');
     this.socket = io('/', { query: { gameId } });
 
-    const { socket } = this;
-    socket.on('room joined', payload => {
+    this.socket.on('room joined', payload => {
       const { meta, moves } = payload;
-      const { board, gamestate, whiteDead, brownDead } = this.state;
+      const { board, gamestate, whiteDead, blackDead } = this.state;
       const nextBoard = copy(board);
       const nextGamestate = copy(gamestate);
       const nextWhiteDead = whiteDead;
-      const nextBrownDead = brownDead;
+      const nextBlackDead = blackDead;
       if (this.state.meta) {
         if (this.state.meta.opponentName) {
           return;
@@ -84,7 +81,7 @@ export default class Game extends React.Component {
             if (killed[0] === 'w') {
               nextWhiteDead.push(killed);
             } else {
-              nextBrownDead.push(killed);
+              nextBlackDead.push(killed);
             }
           }
           // promote any pawns
@@ -95,21 +92,11 @@ export default class Game extends React.Component {
         }
       }
       // update phase
-      let phase = 'pending';
-      if (meta.opponentName) {
-        if (side[0] === nextGamestate.turn[0]) {
-          phase = 'selecting';
-        } else {
-          phase = 'opponent turn';
-        }
-      }
+      let phase = side[0] === nextGamestate.turn[0] ? 'selecting' : 'opponent turn';
       if (nextGamestate.checkmate) {
         phase = 'done';
       }
       if (nextGamestate.draw) {
-        phase = 'done';
-      }
-      if (meta.winner) {
         phase = 'done';
       }
 
@@ -120,12 +107,12 @@ export default class Game extends React.Component {
         board: nextBoard,
         gamestate: nextGamestate,
         whiteDead: nextWhiteDead,
-        brownDead: nextBrownDead
+        blackDead: nextBlackDead
       });
     });
 
-    socket.on('move made', move => {
-      const { board, gamestate, whiteDead, brownDead } = this.state;
+    this.socket.on('move made', move => {
+      const { board, gamestate, whiteDead, blackDead } = this.state;
       const { start, end, promotion } = move;
       if (!board[start].piece) {
         return;
@@ -135,34 +122,21 @@ export default class Game extends React.Component {
       const nextGamestate = copy(gamestate);
       const killed = this.executeMove(nextBoard, nextGamestate, start, end);
       const nextWhiteDead = whiteDead;
-      const nextBrownDead = brownDead;
-      let phase = 'selecting';
-      let showCheck = 0;
-      let showCheckmate = 0;
-      let showDraw = 0;
+      const nextBlackDead = blackDead;
       // add dead pieces to player palette
       if (killed) {
         if (killed[0] === 'w') {
           nextWhiteDead.push(killed);
         } else {
-          nextBrownDead.push(killed);
+          nextBlackDead.push(killed);
         }
       }
-      // promote any pawns
-      if (promotion) {
-        nextBoard[end].piece = promotion;
-        nextGamestate.promoting = null;
-        // apply scans
-        changeTurn(nextGamestate, true);
-        pawnScan(nextBoard, nextGamestate);
-        checkScan(nextBoard, nextGamestate);
-        checkmateScan(nextBoard, nextGamestate);
-        drawScan(nextBoard, nextGamestate);
-        castleScan(nextBoard, nextGamestate);
-        changeTurn(nextGamestate);
-      }
+      let phase = 'selecting';
       // display banners when applicable
-      if (!nextGamestate.checkmate && (nextGamestate.check.wb || nextGamestate.check.bw)) {
+      let showCheck = 0;
+      let showCheckmate = 0;
+      let showDraw = 0;
+      if (nextGamestate.check.wb || nextGamestate.check.bw) {
         showCheck = setTimeout(this.removeBanner, 2000);
       }
       if (nextGamestate.checkmate) {
@@ -173,27 +147,23 @@ export default class Game extends React.Component {
         showDraw = setTimeout(this.removeBanner, 2000);
         phase = 'done';
       }
+      // promote any pawns
+      if (promotion) {
+        nextBoard[end].piece = promotion;
+        nextGamestate.promoting = null;
+      }
       this.setState({
         board: nextBoard,
         gamestate: nextGamestate,
         phase,
         whiteDead: nextWhiteDead,
-        brownDead: nextBrownDead,
+        blackDead: nextBlackDead,
         showCheck,
         showCheckmate,
         showDraw
       });
 
       setTimeout(this.concludeGame, 1000);
-    });
-
-    socket.on('forfeit', meta => {
-      setTimeout(this.openPostGame, 2000);
-      this.setState({
-        meta,
-        phase: 'done',
-        showForfeit: setTimeout(this.removeBanner, 2000)
-      });
     });
   }
 
@@ -211,27 +181,13 @@ export default class Game extends React.Component {
   }
 
   handleClick(event) {
-    const { phase, meta, side } = this.state;
+    const { phase } = this.state;
     const { showOptions, decideMove } = this;
-    const { user } = this.context;
     const coord = parseInt(event.target.closest('.tile').id);
     if (Number.isNaN(coord)) {
       return;
     }
-    if (phase === 'opponent turn' ||
-    phase === 'pending' ||
-    phase === 'promoting' ||
-    phase === 'done') {
-      return;
-    }
-    // prevent spectators from moving pieces
-    let player = meta.playerName;
-    if (meta.opponentName) {
-      if (side !== meta.playerSide) {
-        player = meta.opponentName;
-      }
-    }
-    if (user.username !== player) {
+    if (phase === 'opponent turn' || phase === 'promoting' || phase === 'done') {
       return;
     }
 
@@ -269,7 +225,7 @@ export default class Game extends React.Component {
   }
 
   decideMove(end) {
-    const { board, gamestate, highlighted, selected, whiteDead, brownDead } = this.state;
+    const { board, gamestate, highlighted, selected, whiteDead, blackDead } = this.state;
     if (!highlighted.includes(end)) {
       this.setState({
         phase: 'selecting',
@@ -285,14 +241,14 @@ export default class Game extends React.Component {
 
     const killed = this.executeMove(nextBoard, nextGamestate, selected, end);
     const nextWhiteDead = whiteDead;
-    const nextBrownDead = brownDead;
+    const nextBlackDead = blackDead;
 
     // add dead pieces to player palette
     if (killed) {
       if (killed[0] === 'w') {
         nextWhiteDead.push(killed);
       } else {
-        nextBrownDead.push(killed);
+        nextBlackDead.push(killed);
       }
     }
 
@@ -308,7 +264,7 @@ export default class Game extends React.Component {
       selected: 0,
       highlighted: [],
       whiteDead: nextWhiteDead,
-      brownDead: nextBrownDead
+      blackDead: nextBlackDead
     });
 
     if (!nextGamestate.promoting) {
@@ -325,16 +281,6 @@ export default class Game extends React.Component {
       killed = board[end].player + board[end].piece;
     } else if (board[start].piece === 'p') {
       gamestate.pawnOrKillCounter = 0;
-      // add en passant kills
-      if (board[start].player === 'w' && gamestate.enPassantBrown) {
-        if (end === gamestate.enPassantBrown - 10) {
-          killed = 'bp';
-        }
-      } else if (board[start].player === 'b' && gamestate.enPassantWhite) {
-        if (end === gamestate.enPassantWhite + 10) {
-          killed = 'wp';
-        }
-      }
     } else {
       gamestate.pawnOrKillCounter++;
     }
@@ -343,7 +289,7 @@ export default class Game extends React.Component {
     if (board[start].piece === 'p' && (start > 20 && start < 29) && (end > 40 && end < 49)) {
       gamestate.enPassantWhite = start;
     } else if (board[start].piece === 'p' && (start > 70 && start < 79) && (end > 50 && end < 59)) {
-      gamestate.enPassantBrown = start;
+      gamestate.enPassantBlack = start;
     }
 
     // move piece
@@ -370,7 +316,7 @@ export default class Game extends React.Component {
     let showCheck = 0;
     let showCheckmate = 0;
     let showDraw = 0;
-    if (!nextGamestate.checkmate && (nextGamestate.check.wb || nextGamestate.check.bw)) {
+    if (nextGamestate.check.wb || nextGamestate.check.bw) {
       showCheck = setTimeout(this.removeBanner, 2000);
     }
     if (nextGamestate.checkmate) {
@@ -391,14 +337,14 @@ export default class Game extends React.Component {
 
     // update other player
     const body = { start, end, promotion };
-    const req = {
+    const res = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     };
-    fetch(`/api/moves/${meta.gameId}`, req)
+    fetch(`/api/moves/${meta.gameId}`, res)
       .then(result => {
         if (phase === 'done') {
           const { gamestate } = this.state;
@@ -409,18 +355,18 @@ export default class Game extends React.Component {
             if (gamestate.turn === 'bw') {
               winner = 'white';
             } else {
-              winner = 'brown';
+              winner = 'black';
             }
           }
           const body = { winner };
-          const req = {
+          const res = {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify(body)
           };
-          fetch(`/api/games/${meta.gameId}`, req)
+          fetch(`/api/games/${meta.gameId}`, res)
             .then(res => res.json())
             .then(result => {
               this.setState({ meta: result });
@@ -439,16 +385,6 @@ export default class Game extends React.Component {
     window.localStorage.removeItem('start');
     nextBoard[end].piece = event.target.id;
     nextGamestate.promoting = 0;
-
-    // apply scans
-    changeTurn(nextGamestate, true);
-    pawnScan(nextBoard, nextGamestate);
-    checkScan(nextBoard, nextGamestate);
-    checkmateScan(nextBoard, nextGamestate);
-    drawScan(nextBoard, nextGamestate);
-    castleScan(nextBoard, nextGamestate);
-    changeTurn(nextGamestate);
-
     this.setState({
       board: nextBoard,
       gamestate: nextGamestate,
@@ -474,8 +410,7 @@ export default class Game extends React.Component {
     this.setState({
       showCheck: 0,
       showCheckmate: 0,
-      showDraw: 0,
-      showForfeit: 0
+      showDraw: 0
     });
   }
 
@@ -492,15 +427,14 @@ export default class Game extends React.Component {
       return null;
     }
     const { board, meta, side, postGameOpen, selected, highlighted, phase } = this.state;
-    const { whiteDead, brownDead, showCheck, showCheckmate, showDraw, showForfeit } = this.state;
-    const { handleClick, cancelGame, promotePawn, openPostGame, closePostGame, socket } = this;
-    const playerDead = side === 'white' ? whiteDead : brownDead;
-    const opponentDead = side === 'white' ? brownDead : whiteDead;
-    const promoteFunc = phase === 'promoting' ? promotePawn : null;
+    const { whiteDead, blackDead, showCheck, showCheckmate, showDraw } = this.state;
+    const playerDead = side === 'white' ? whiteDead : blackDead;
+    const opponentDead = side === 'white' ? blackDead : whiteDead;
+    const promoteFunc = phase === 'promoting' ? this.promotePawn : null;
 
     let player = { username: meta.playerName };
     let opponent = null;
-    let resolution = 'undecided';
+    let resolution = null;
     if (meta.opponentName) {
       if (side === meta.playerSide) {
         player = { username: meta.playerName, side };
@@ -521,8 +455,6 @@ export default class Game extends React.Component {
     }
 
     const postGameContext = {
-      socket,
-      meta,
       player,
       opponent,
       open: postGameOpen,
@@ -530,48 +462,45 @@ export default class Game extends React.Component {
     };
 
     return (
-      <PostGameContext.Provider value={postGameContext} >
-        <div className="game page-height mx-auto">
-            <PostGame closePostGame={this.closePostGame} media="small" />
+      <div className="game page-height mx-auto">
+        <PostGameContext.Provider value={postGameContext} >
+          <PostGame closePostGame={this.closePostGame} media="small" />
+        </PostGameContext.Provider>
 
-          <div className="w-100 d-block d-sm-none p-2">
-            <PlayerPalette player={opponent} dead={playerDead} cancelAction={cancelGame} />
-          </div>
+        <div className="w-100 d-block d-sm-none p-2">
+          <PlayerPalette player={opponent} dead={opponentDead} cancelAction={this.cancelGame} />
+        </div>
 
-          <div className="w-100 row">
-            <div className="col">
-              <div className="board-container my-1" onClick={handleClick}>
-                <Banner message={'Check'} show={showCheck} />
-                <Banner message={'Checkmate'} show={showCheckmate} />
-                <Banner message={'Draw'} show={showDraw} />
-                <Banner message={'Opponent Forfeit'} show={showForfeit} />
-                <ReactBoard board={board} highlighted={highlighted} selected={selected} side={side} />
-              </div>
-            </div>
+        <div className="w-100 row">
+          <div className="col">
 
-            <div className="col-auto w-375 d-none d-sm-block container position-relative">
-              <PostGame closePostGame={closePostGame} media="large" />
-              <div className="row py-3">
-                <div className="col w-100">
-                  <PlayerPalette player={opponent} dead={playerDead} cancelAction={cancelGame} />
-                </div>
-              </div>
-              <div className="row py-3">
-                <div className="col w-100">
-                  <PlayerPalette player={player} promote={promoteFunc} dead={opponentDead} exitAction={openPostGame} />
-                </div>
-              </div>
+            <div className="board-container my-1" onClick={this.handleClick}>
+              <Banner message={'Check'} show={showCheck} />
+              <Banner message={'Checkmate'} show={showCheckmate} />
+              <Banner message={'Draw'} show={showDraw} />
+              <ReactBoard board={board} highlighted={highlighted} selected={selected} side={side} />
             </div>
           </div>
 
-          <div className="w-100 d-block d-sm-none p-2">
-            <PlayerPalette player={player} promote={promoteFunc} dead={opponentDead} exitAction={openPostGame} />
+          <div className="col-auto d-none d-sm-block">
+            <PostGameContext.Provider value={postGameContext} >
+              <PostGame closePostGame={this.closePostGame} media="large" />
+            </PostGameContext.Provider>
+            <div className="w-100 p-2">
+              <PlayerPalette player={opponent} dead={opponentDead} cancelAction={this.cancelGame} />
+            </div>
+            <div className="w-100 p-2">
+              <PlayerPalette player={player} promote={promoteFunc} dead={playerDead} />
+            </div>
           </div>
         </div>
-      </PostGameContext.Provider>
 
+        <div className="w-100 d-block d-sm-none p-2">
+          <PlayerPalette player={player} promote={promoteFunc} dead={playerDead} />
+        </div>
+      </div>
     );
   }
 }
 
-Game.contextType = GlobalContext;
+Game.contextType = RouteContext;
