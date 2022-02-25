@@ -305,7 +305,7 @@ a:hover {
 }
 
 .post:hover {
-  border: solid 5px #956a43;
+  background-color: #956a43;
 }
 
 .post-board-container {
@@ -456,7 +456,7 @@ a:hover {
 }
 
 .banner {
-  background-color: #4e545e;
+  background-color: #000;
   color: #eaecee;
   width: calc(100% - 4px);
   height: 10%;
@@ -472,7 +472,6 @@ a:hover {
   align-items: center;
   opacity: 0%;
   pointer-events: none;
-  box-shadow: 0 4px 4px 2px rgba(0, 0, 0, 0.7);
 }
 
 .banner.show {
@@ -545,8 +544,8 @@ a:hover {
 }
 
 .post-game {
-  background-color: #eaecee;
-  color: #32363c;
+  background-color: #250707;
+  color: #ffff;
   z-index: 5;
   padding: 2rem 0.75rem;
 }
@@ -579,7 +578,6 @@ a:hover {
 }
 
 .resolution {
-  background-color: #32363c;
   color: #eaecee;
   font-size: 36px;
   border-radius: 5px;
@@ -596,7 +594,7 @@ a:hover {
 }
 
 .return-to-game-btn {
-  background-color: #4e545e;
+  background-color: #3e201a;
   color: #eaecee;
   width: 100%;
   height: 48px;
@@ -604,11 +602,11 @@ a:hover {
 }
 
 .return-to-game-btn:hover {
-  background-color: #1a1c20;
+  background-color: rgb(29, 30, 34);
 }
 
 .exit-btn {
-  background-color: #e45252;
+  background-color: #3e201a;
   color: #eaecee;
   width: 100%;
   height: 48px;
@@ -617,5 +615,9 @@ a:hover {
 }
 
 .exit-btn:hover {
-  background-color: #df2929;
+  background-color: rgb(29, 30, 34);
+}
+
+.bg-black {
+  background-color: black;
 }

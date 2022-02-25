@@ -44,7 +44,7 @@ export default class PostGame extends React.Component {
     if (media === 'small') {
       postGameClass += ' small w-100 d-block d-sm-none';
     } else if (media === 'large') {
-      postGameClass += ' large w-375 d-none d-sm-block';
+      postGameClass += 'large w-375 d-none d-sm-block';
     }
 
     return (
@@ -91,16 +91,9 @@ function Player(props) {
   if (!player) {
     player = { username: 'Anonymous' };
   }
-  const avatarStyle = {
-    backgroundImage: 'url(images/default-avatar.png)'
-  };
-  const trophy = <img className="trophy mx-2" src="images/trophy.svg" />;
   return (
     <>
-      <div className="dot gray mx-1" />
-      <div className="avatar mx-2" style={avatarStyle} />
-      <span className="font-24">{player.username}</span>
-      {win && trophy}
+      { win }
     </>
   );
 }
@@ -111,22 +104,16 @@ function Resolution(props) {
   if (resolution === 'win') {
     text = (
       <>
-        <img className="trophy mx-2" src="images/trophy.svg" />
-        {'You won!!'}
-        <img className="trophy mx-2" src="images/trophy.svg" />
+        {'You Won!'}
+        <img className="trophy mx-2" src="images/trophy.png" />
       </>
     );
   } else if (resolution === 'lose') {
-    text = 'You lost...';
+    text = 'Opponent Won';
   } else if (resolution === 'draw') {
-    text = 'Draw!';
-  } else if (resolution === 'undecided') {
-    text = (
-      <p className="post-game-message p-2">
-        Leaving the game will forfeit the match.  Are you sure you want to leave?
-      </p>
-    );
+    text = 'Draw';
   }
+
   return (
     <div className="resolution mt-5">
       {text}
