@@ -44,6 +44,10 @@ io.on('connection', socket => {
   socket.on('join lobby', () => {
     socket.join('lobby');
   });
+
+  socket.on('forfeit', () => {
+    socket.broadcast.to(gameId).emit('forfeit');
+  });
 });
 
 app.use(express.json());
