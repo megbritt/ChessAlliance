@@ -428,9 +428,10 @@ export default class Game extends React.Component {
     }
     const { board, meta, side, postGameOpen, selected, highlighted, phase } = this.state;
     const { whiteDead, blackDead, showCheck, showCheckmate, showDraw } = this.state;
+    const { handleClick, cancelGame, promotePawn, openPostGame, closePostGame } = this;
     const playerDead = side === 'white' ? whiteDead : blackDead;
     const opponentDead = side === 'white' ? blackDead : whiteDead;
-    const promoteFunc = phase === 'promoting' ? this.promotePawn : null;
+    const promoteFunc = phase === 'promoting' ? promotePawn : null;
 
     let player = { username: meta.playerName };
     let opponent = null;
@@ -462,43 +463,42 @@ export default class Game extends React.Component {
     };
 
     return (
-      <div className="game page-height mx-auto">
-        <PostGameContext.Provider value={postGameContext} >
+      <PostGameContext.Provider value={postGameContext} >
+        <div className="game page-height mx-auto">
           <PostGame closePostGame={this.closePostGame} media="small" />
-        </PostGameContext.Provider>
 
-        <div className="w-100 d-block d-sm-none p-2">
-          <PlayerPalette player={opponent} dead={opponentDead} cancelAction={this.cancelGame} />
-        </div>
+          <div className="w-100 d-block d-sm-none p-2">
+            <PlayerPalette player={opponent} dead={opponentDead} cancelAction={cancelGame} />
+          </div>
 
-        <div className="w-100 row">
-          <div className="col">
+          <div className="w-100 row">
+            <div className="col">
 
-            <div className="board-container my-1" onClick={this.handleClick}>
-              <Banner message={'Check'} show={showCheck} />
-              <Banner message={'Checkmate'} show={showCheckmate} />
-              <Banner message={'Draw'} show={showDraw} />
-              <ReactBoard board={board} highlighted={highlighted} selected={selected} side={side} />
+              <div className="board-container my-1" onClick={handleClick}>
+                <Banner message={'Check'} show={showCheck} />
+                <Banner message={'Checkmate'} show={showCheckmate} />
+                <Banner message={'Draw'} show={showDraw} />
+                <ReactBoard board={board} highlighted={highlighted} selected={selected} side={side} />
+              </div>
+            </div>
+
+            <div className="col-auto d-none d-sm-block">
+              <PostGame closePostGame={closePostGame} media="large" />
+              <div className="w-100 p-2">
+                <PlayerPalette player={opponent} dead={opponentDead} cancelAction={cancelGame} />
+              </div>
+              <div className="w-100 p-2">
+                <PlayerPalette player={player} promote={promoteFunc} dead={playerDead} exitAction={openPostGame} />
+              </div>
             </div>
           </div>
 
-          <div className="col-auto d-none d-sm-block">
-            <PostGameContext.Provider value={postGameContext} >
-              <PostGame closePostGame={this.closePostGame} media="large" />
-            </PostGameContext.Provider>
-            <div className="w-100 p-2">
-              <PlayerPalette player={opponent} dead={opponentDead} cancelAction={this.cancelGame} />
-            </div>
-            <div className="w-100 p-2">
-              <PlayerPalette player={player} promote={promoteFunc} dead={playerDead} />
-            </div>
+          <div className="w-100 d-block d-sm-none p-2">
+            <PlayerPalette player={player} promote={promoteFunc} dead={playerDead} exitAction={openPostGame} />
           </div>
         </div>
+      </PostGameContext.Provider>
 
-        <div className="w-100 d-block d-sm-none p-2">
-          <PlayerPalette player={player} promote={promoteFunc} dead={playerDead} />
-        </div>
-      </div>
     );
   }
 }
