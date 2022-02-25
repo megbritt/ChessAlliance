@@ -93,7 +93,7 @@ function Player(props) {
   }
   return (
     <>
-      { win }
+      {win}
     </>
   );
 }
@@ -112,6 +112,12 @@ function Resolution(props) {
     text = 'Opponent Won';
   } else if (resolution === 'draw') {
     text = 'Draw';
+  } else if (resolution === 'undecided') {
+    text = (
+      <p className="post-game-message p-2">
+        Are you sure you want to resign?
+      </p>
+    );
   }
 
   return (

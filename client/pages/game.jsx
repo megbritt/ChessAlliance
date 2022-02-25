@@ -219,9 +219,9 @@ export default class Game extends React.Component {
       return;
     }
     if (phase === 'opponent turn' ||
-    phase === 'pending' ||
-    phase === 'promoting' ||
-    phase === 'done') {
+      phase === 'pending' ||
+      phase === 'promoting' ||
+      phase === 'done') {
       return;
     }
     // prevent spectators from moving pieces
@@ -532,7 +532,7 @@ export default class Game extends React.Component {
     return (
       <PostGameContext.Provider value={postGameContext} >
         <div className="game page-height mx-auto">
-            <PostGame closePostGame={this.closePostGame} media="small" />
+          <PostGame closePostGame={this.closePostGame} media="small" />
 
           <div className="w-100 d-block d-sm-none p-2">
             <PlayerPalette player={opponent} dead={playerDead} cancelAction={cancelGame} />

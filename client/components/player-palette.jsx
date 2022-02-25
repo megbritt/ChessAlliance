@@ -4,7 +4,7 @@ export default function PlayerPalette(props) {
   if (!props.player) {
     return (
       <div
-      className="player-palette d-flex flex-column justify-content-center align-items-center">
+        className="player-palette d-flex flex-column justify-content-center align-items-center">
         <p className="font-24 palette-pending">Waiting for challenger...</p>
         <button className="cancel-btn" onClick={props.cancelAction}>Cancel</button>
       </div>
@@ -17,17 +17,17 @@ export default function PlayerPalette(props) {
     const choices = props.player.side === 'white' ? whiteChoices : brownChoices;
     return (
       <div
-      className="player-palette p-3">
+        className="player-palette p-3">
         <p className="font-24 palette-promotion">Choose a promotion</p>
         {
           choices.map(choice => {
             return (
               <img
-              key={choice}
-              id={choice[1]}
-              src={`/images/${choice}.png`}
-              className="promotion chess-piece m-1"
-              onClick={props.promote} />
+                key={choice}
+                id={choice[1]}
+                src={`/images/${choice}.png`}
+                className="promotion chess-piece m-1"
+                onClick={props.promote} />
             );
           })
         }
@@ -35,7 +35,7 @@ export default function PlayerPalette(props) {
     );
   }
 
-  const { player, dead } = props;
+  const { player, dead, exitAction } = props;
   const deadPieces = dead.map((piece, index) => {
     return <img key={index} src={`/images/${piece}.png`} className="dead chess-piece m-1" />;
   });
@@ -45,13 +45,22 @@ export default function PlayerPalette(props) {
         <div className="col px-0">
           <div className="d-flex align-items-center">
             <img src="images/default-avatar.png" className="palette-avatar" />
-            <span className="font-24 palette-username">{player.username}</span>
+            <span className="font-24 palette-username">
+              {player.username}
+              {player.side && (
+                exitAction && (
+                  <img className="px-2 cursor-pointer" src="/images/white-flag.png" onClick={exitAction} />
+                )
+              )}
+
+            </span>
           </div>
 
           <div className="d-flex flex-wrap">
             {deadPieces}
           </div>
         </div>
+
       </div>
     </div>
   );
