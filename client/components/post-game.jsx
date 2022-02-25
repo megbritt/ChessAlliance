@@ -2,6 +2,28 @@ import React from 'react';
 import PostGameContext from '../lib/post-game-context';
 
 export default class PostGame extends React.Component {
+  constructor(props) {
+    super(props);
+    this.handleExit = this.handleExit.bind(this);
+  }
+
+  handleExit() {
+    const { meta, opponent, resolution } = this.context;
+    if (resolution !== 'undecided') {
+      return;
+    }
+
+    const body = { winner: opponent.side };
+    const req = {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    };
+    fetch(`/api/games/${meta.gameId}`, req);
+  }
+
   render() {
     const { closePostGame, media } = this.props;
     const { player, opponent, open, resolution } = this.context;
@@ -43,7 +65,7 @@ export default class PostGame extends React.Component {
 
         <div className="row my-3">
           <div className="col justify-content-center">
-            <a className="exit-btn" href="#join">{exitText}</a>
+            <a className="exit-btn" href="#join" onClick={this.handleExit}>{exitText}</a>
           </div>
         </div>
       </div>

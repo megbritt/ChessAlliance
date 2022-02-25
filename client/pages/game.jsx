@@ -337,14 +337,14 @@ export default class Game extends React.Component {
 
     // update other player
     const body = { start, end, promotion };
-    const res = {
+    const req = {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
     };
-    fetch(`/api/moves/${meta.gameId}`, res)
+    fetch(`/api/moves/${meta.gameId}`, req)
       .then(result => {
         if (phase === 'done') {
           const { gamestate } = this.state;
@@ -359,14 +359,14 @@ export default class Game extends React.Component {
             }
           }
           const body = { winner };
-          const res = {
+          const req = {
             method: 'PUT',
             headers: {
               'Content-Type': 'application/json'
             },
             body: JSON.stringify(body)
           };
-          fetch(`/api/games/${meta.gameId}`, res)
+          fetch(`/api/games/${meta.gameId}`, req)
             .then(res => res.json())
             .then(result => {
               this.setState({ meta: result });
@@ -456,6 +456,7 @@ export default class Game extends React.Component {
     }
 
     const postGameContext = {
+      meta,
       player,
       opponent,
       open: postGameOpen,
