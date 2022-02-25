@@ -607,16 +607,12 @@ a:hover {
 }
 
 .exit-btn {
-  background-color: #e45252;
+  background-color: #000;
   color: #eaecee;
   width: 100%;
   height: 48px;
   margin: auto;
   transition: background-color 0.25s ease;
-}
-
-.exit-btn:hover {
-  background-color: #df2929;
 }
 
 .bg-black {

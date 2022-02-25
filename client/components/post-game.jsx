@@ -40,7 +40,7 @@ export default class PostGame extends React.Component {
 
     const exitText = resolution === 'undecided' ? 'Leave' : 'Exit';
 
-    let postGameClass = 'post-game page-height bg-black';
+    let postGameClass = 'post-game page-height';
     if (media === 'small') {
       postGameClass += ' small w-100 d-block d-sm-none';
     } else if (media === 'large') {
@@ -49,7 +49,7 @@ export default class PostGame extends React.Component {
 
     return (
       <div className={postGameClass}>
-        <div className="row bg-black">
+        <div className="row">
           <div className="d-flex align-items-center my-2">
             <Player player={player} win={resolution === 'win'} />
           </div>
@@ -111,8 +111,8 @@ function Resolution(props) {
   if (resolution === 'win') {
     text = (
       <>
-        <img className="trophy" src="images/trophy.png" />
         {'You Won!'}
+        <img className="trophy mx-2" src="images/trophy.png" />
       </>
     );
   } else if (resolution === 'lose') {
