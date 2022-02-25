@@ -3,8 +3,6 @@ const express = require('express');
 const pg = require('pg');
 const http = require('http');
 const { Server } = require('socket.io');
-const argon2 = require('argon2');
-const jwt = require('jsonwebtoken');
 const errorMiddleware = require('./error-middleware');
 const staticMiddleware = require('./static-middleware');
 const ClientError = require('./client-error');
@@ -25,25 +23,6 @@ io.on('connection', socket => {
 
   if (gameId) {
     socket.join(gameId);
-
-    socket.on('forfeit', () => {
-      const sql = `
-      select *
-        from "games"
-      where "gameId" = $1
-      `;
-      const params = [gameId];
-      db.query(sql, params)
-        .then(result => {
-          if (result.rows.length === 0) {
-            throw new ClientError(404, 'no such gameId exists');
-          }
-          const meta = result.rows[0];
-          socket.broadcast.to(gameId).emit('forfeit', meta);
-        })
-        .catch(err => console.error(err));
-    });
-
     const sql = `
     select *
       from "games"
@@ -53,26 +32,8 @@ io.on('connection', socket => {
     db.query(sql, params)
       .then(result => {
         const meta = result.rows[0];
-        const payload = {};
-        payload.meta = meta;
-        if (!meta.opponentName) {
-          io.to(gameId).emit('room joined', payload);
-        } else {
-          const sql = `
-          select *
-            from "moves"
-          where "gameId" = $1
-          order by "moveId"
-          `;
-          const params = [gameId];
-          db.query(sql, params)
-            .then(result => {
-              payload.moves = result.rows;
-              io.to('lobby').emit('remove post', meta);
-              io.to(gameId).emit('room joined', payload);
-            })
-            .catch(err => console.error(err));
-        }
+        io.to(gameId).emit('room joined', meta);
+        io.to('lobby').emit('game joined', meta);
       })
       .catch(err => {
         console.error(err);
@@ -83,7 +44,6 @@ io.on('connection', socket => {
   socket.on('join lobby', () => {
     socket.join('lobby');
   });
-
 });
 
 app.use(express.json());
@@ -150,7 +110,7 @@ app.post('/api/games', (req, res, next) => {
   if (!playerName || !playerSide || (!message && message !== '')) {
     throw new ClientError(400, 'missing required field');
   }
-  const opponentSide = playerSide === 'white' ? 'brown' : 'white';
+  const opponentSide = playerSide === 'white' ? 'black' : 'white';
   const sql = `
   insert into "games" ("message", "playerName", "playerSide", "opponentSide")
   values ($1, $2, $3, $4)
@@ -159,9 +119,7 @@ app.post('/api/games', (req, res, next) => {
   const params = [message, playerName, playerSide, opponentSide];
   db.query(sql, params)
     .then(result => {
-      const [meta] = result.rows;
-      io.to('lobby').emit('add post', meta);
-      res.status(201).json(meta);
+      res.json(result.rows[0]);
     })
     .catch(err => next(err));
 });
@@ -223,73 +181,14 @@ app.post('/api/moves/:gameId', (req, res, next) => {
       }
       const move = result.rows[0];
       io.to(gameId).emit('move made', move);
-      res.status(201).json(move);
-    })
-    .catch(err => next(err));
-});
-
-app.post('/api/auth/sign-up', (req, res, next) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    throw new ClientError(400, 'username and password are required fields');
-  }
-
-  argon2
-    .hash(password)
-    .then(hashedPassword => {
-      const sql = `
-      insert into "users" ("username", "hashedPassword")
-      values ($1, $2)
-      on conflict ("username") do nothing
-      returning "userId", "username", "createdAt"
-      `;
-      const params = [username, hashedPassword];
-      return db.query(sql, params);
-    })
-    .then(result => {
-      const [user] = result.rows;
-      const status = user ? 201 : 204;
-      res.status(status).json(user);
-    })
-    .catch(err => next(err));
-});
-
-app.post('/api/auth/sign-in', (req, res, next) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    throw new ClientError(401, 'invalid login');
-  }
-
-  const sql = `
-  select "userId",
-         "hashedPassword"
-    from "users"
-   where "username" = $1
-  `;
-  const params = [username];
-  db.query(sql, params)
-    .then(result => {
-      if (!result.rows[0]) {
-        throw new ClientError(401, 'invalid login');
-      }
-      const { userId, hashedPassword } = result.rows[0];
-      return argon2
-        .verify(hashedPassword, password)
-        .then(isMatching => {
-          if (!isMatching) {
-            throw new ClientError(401, 'invalid login');
-          }
-          const user = { userId, username };
-          const token = jwt.sign(user, process.env.TOKEN_SECRET);
-          res.json({ token, user: user });
-        });
+      res.json(move);
     })
     .catch(err => next(err));
 });
 
 app.put('/api/games/:gameId', (req, res, next) => {
   const { winner } = req.body;
-  const resolutions = ['white', 'brown', 'draw'];
+  const resolutions = ['white', 'black', 'draw'];
   if (!winner) {
     throw new ClientError(400, 'missing required field');
   }
@@ -337,9 +236,7 @@ app.delete('/api/games/:gameId', (req, res, next) => {
       if (result.rows.length === 0) {
         throw new ClientError(404, 'no such gameId exists');
       }
-      const [meta] = result.rows;
-      io.to('lobby').emit('remove post', meta);
-      res.json(meta);
+      res.json(result.rows[0]);
     })
     .catch(err => next(err));
 });
