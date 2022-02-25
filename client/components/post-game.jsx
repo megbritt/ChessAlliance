@@ -7,8 +7,10 @@ export default class PostGame extends React.Component {
     this.handleExit = this.handleExit.bind(this);
   }
 
-  handleExit() {
-    const { meta, opponent, resolution } = this.context;
+  handleExit(event) {
+    event.preventDefault();
+    const { socket, meta, opponent, resolution } = this.context;
+    const { gameId } = meta;
     if (resolution !== 'undecided') {
       return;
     }
@@ -21,7 +23,11 @@ export default class PostGame extends React.Component {
       },
       body: JSON.stringify(body)
     };
-    fetch(`/api/games/${meta.gameId}`, req);
+    fetch(`/api/games/${gameId}`, req)
+      .then(result => {
+        socket.emit('forfeit');
+        window.location.hash = '#join';
+      });
   }
 
   render() {
@@ -65,7 +71,7 @@ export default class PostGame extends React.Component {
 
         <div className="row my-3">
           <div className="col justify-content-center">
-            <a className="exit-btn" href="#join" onClick={this.handleExit}>{exitText}</a>
+            <a className="exit-btn" onClick={this.handleExit}>{exitText}</a>
           </div>
         </div>
       </div>

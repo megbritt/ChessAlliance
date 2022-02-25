@@ -32,7 +32,6 @@ io.on('connection', socket => {
       `;
       const params = [gameId];
       db.query(sql, params)
-        .then(res => res.json())
         .then(result => {
           if (result.rows.length === 0) {
             throw new ClientError(404, 'no such gameId exists');

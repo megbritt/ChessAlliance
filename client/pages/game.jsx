@@ -428,7 +428,7 @@ export default class Game extends React.Component {
     }
     const { board, meta, side, postGameOpen, selected, highlighted, phase } = this.state;
     const { whiteDead, blackDead, showCheck, showCheckmate, showDraw } = this.state;
-    const { handleClick, cancelGame, promotePawn, openPostGame, closePostGame } = this;
+    const { handleClick, cancelGame, promotePawn, openPostGame, closePostGame, socket } = this;
     const playerDead = side === 'white' ? whiteDead : blackDead;
     const opponentDead = side === 'white' ? blackDead : whiteDead;
     const promoteFunc = phase === 'promoting' ? promotePawn : null;
@@ -456,6 +456,7 @@ export default class Game extends React.Component {
     }
 
     const postGameContext = {
+      socket,
       meta,
       player,
       opponent,
