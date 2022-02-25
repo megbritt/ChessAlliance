@@ -38,7 +38,8 @@ export default class Game extends React.Component {
       blackDead: [],
       showCheck: 0,
       showCheckmate: 0,
-      showDraw: 0
+      showDraw: 0,
+      showForfeit: 0
     };
     this.cancelGame = this.cancelGame.bind(this);
     this.handleClick = this.handleClick.bind(this);
@@ -59,7 +60,8 @@ export default class Game extends React.Component {
     const side = params.get('side');
     this.socket = io('/', { query: { gameId } });
 
-    this.socket.on('room joined', payload => {
+    const { socket } = this;
+    socket.on('room joined', payload => {
       const { meta, moves } = payload;
       const { board, gamestate, whiteDead, blackDead } = this.state;
       const nextBoard = copy(board);
@@ -111,7 +113,7 @@ export default class Game extends React.Component {
       });
     });
 
-    this.socket.on('move made', move => {
+    socket.on('move made', move => {
       const { board, gamestate, whiteDead, blackDead } = this.state;
       const { start, end, promotion } = move;
       if (!board[start].piece) {
@@ -164,6 +166,14 @@ export default class Game extends React.Component {
       });
 
       setTimeout(this.concludeGame, 1000);
+    });
+
+    socket.on('forfeit', meta => {
+      this.setState({
+        meta,
+        phase: 'done',
+        showForfeit: setTimeout(this.removeBanner, 2000)
+      });
     });
   }
 
@@ -410,7 +420,8 @@ export default class Game extends React.Component {
     this.setState({
       showCheck: 0,
       showCheckmate: 0,
-      showDraw: 0
+      showDraw: 0,
+      showForfeit: 0
     });
   }
 
@@ -427,7 +438,7 @@ export default class Game extends React.Component {
       return null;
     }
     const { board, meta, side, postGameOpen, selected, highlighted, phase } = this.state;
-    const { whiteDead, blackDead, showCheck, showCheckmate, showDraw } = this.state;
+    const { whiteDead, blackDead, showCheck, showCheckmate, showDraw, showForfeit } = this.state;
     const { handleClick, cancelGame, promotePawn, openPostGame, closePostGame, socket } = this;
     const playerDead = side === 'white' ? whiteDead : blackDead;
     const opponentDead = side === 'white' ? blackDead : whiteDead;
@@ -480,6 +491,7 @@ export default class Game extends React.Component {
                 <Banner message={'Check'} show={showCheck} />
                 <Banner message={'Checkmate'} show={showCheckmate} />
                 <Banner message={'Draw'} show={showDraw} />
+                <Banner message={'Opponent Forfeit'} show={showForfeit} />
                 <ReactBoard board={board} highlighted={highlighted} selected={selected} side={side} />
               </div>
             </div>
