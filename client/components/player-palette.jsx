@@ -42,7 +42,7 @@ export default function PlayerPalette(props) {
   return (
     <div className="player-palette container">
       <div className="row">
-        <div className="col">
+        <div className="col px-0">
           <div className="d-flex align-items-center">
             <img src="images/default-avatar.png" className="palette-avatar" />
             <span className="font-24 palette-username">{player.username}</span>

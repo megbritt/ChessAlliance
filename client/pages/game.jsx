@@ -435,7 +435,7 @@ export default class Game extends React.Component {
 
     let player = { username: meta.playerName };
     let opponent = null;
-    let resolution = null;
+    let resolution = 'undecided';
     if (meta.opponentName) {
       if (side === meta.playerSide) {
         player = { username: meta.playerName, side };
