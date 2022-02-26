@@ -55,9 +55,8 @@ export default class SignIn extends React.Component {
   }
 
   render() {
-    const { handleChange, handleSubmit, togglePassword } = this;
+    const { handleChange, handleSubmit } = this;
     const { username, password, passwordType, invalidLogin } = this.state;
-    const toggle = passwordType === 'password' ? 'images/eye-close.svg' : 'images/eye-open.svg';
     let errorClass = 'auth-error-box';
     let errorMessage = '';
     if (invalidLogin) {
@@ -70,7 +69,7 @@ export default class SignIn extends React.Component {
         <div className="row my-5">
           <div className="col text-center">
             <label htmlFor="username">
-              <h1 className="auth-title">LOGIN</h1>
+              <h1 className="auth-title">Login</h1>
             </label>
           </div>
         </div>
@@ -81,7 +80,6 @@ export default class SignIn extends React.Component {
 
         <div className="row">
           <div className="col auth-field">
-            <img src="images/user-icon.svg" className="p-1" />
             <input
               required
               autoFocus
@@ -96,7 +94,6 @@ export default class SignIn extends React.Component {
         </div>
         <div className="row pt-1">
           <div className="col auth-field">
-            <img src="images/password-icon.svg" className="p-1" />
             <input
               required
               type={passwordType}
@@ -106,21 +103,12 @@ export default class SignIn extends React.Component {
               value={password}
               className="auth-input"
               onChange={handleChange} />
-            <img src={toggle} className="p-1 cursor-pointer" onClick={togglePassword} />
           </div>
         </div>
 
         <div className="row my-4">
           <div className="col p-0">
             <button className="auth-submit-btn sign-in">Log In</button>
-          </div>
-        </div>
-
-        <div className="row">
-          <div className="col">
-            <p className="font-14 text-center">
-              {"Don't have an account?"} <a href="#sign-up" className="auth-switch-anchor sign-up">SIGN UP</a>
-            </p>
           </div>
         </div>
       </form>

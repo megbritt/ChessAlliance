@@ -1,6 +1,6 @@
 insert into "games" ("message", "playerName", "playerSide", "opponentSide")
 values ('Enter to join daily chess tournament', 'Starkid753', 'brown', 'white'),
-       ('pros only', '', 'white', 'brown')
+       ('pros only', 'Anonymous', 'white', 'brown')
 returning *;
 
 insert into "users" ("username", "hashedPassword")

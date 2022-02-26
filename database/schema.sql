@@ -38,7 +38,7 @@ CREATE TABLE "public"."games" (
 
 CREATE TABLE "public"."users" (
 	"userId" serial NOT NULL,
-	"username" TEXT NOT NULL,
+	"username" TEXT NOT NULL UNIQUE,
 	"hashedPassword" TEXT NOT NULL,
 	"createdAt" timestamp with time zone NOT NULL default now(),
 	CONSTRAINT "users_pk" PRIMARY KEY ("userId")
