@@ -152,20 +152,21 @@ a:hover {
 }
 
 .auth-btn {
-  color: #eaecee;
+  color: #956a43;
   width: 111px;
   height: 40px;
   font-size: 24px;
-  font-weight: 350;
+  font-weight: 500;
   transition: background-color 0.125s ease;
+  font-family: 'Cormorant SC', sans-serif;
 }
 
 .auth-btn.sign-up {
-  background-color: #be8647c2;
+  background-color: #000;
 }
 
 .auth-btn.sign-up:hover {
-  background-color: #be8647;
+  background-color: #1a1c20;
 }
 
 .auth-btn.sign-in {

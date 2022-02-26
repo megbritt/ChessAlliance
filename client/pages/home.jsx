@@ -1,4 +1,5 @@
 import React from 'react';
+import AuthRouteButton from '../components/auth-route-button';
 import GameModeButton from '../components/game-mode-button';
 
 export default class Home extends React.Component {
@@ -17,7 +18,13 @@ export default class Home extends React.Component {
             <GameModeButton type="m" />
           </div>
         </div>
-      </div>
+
+        <div className="row my-4">
+          <div className="col">
+            <AuthRouteButton type="sign-up" />
+         </div>
+        </div>
+      </div >
 
     );
   }
