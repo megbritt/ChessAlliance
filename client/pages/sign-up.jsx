@@ -78,10 +78,9 @@ export default class SignUp extends React.Component {
   }
 
   render() {
-    const { handleChange, handleSubmit, togglePassword } = this;
+    const { handleChange, handleSubmit } = this;
     const { username, password, passwordType } = this.state;
     const { usernameTooShort, usernameTooLong, usernameTaken, passwordTooShort } = this.state;
-    const toggle = passwordType === 'password' ? 'images/eye-close.svg' : 'images/eye-open.svg';
     let errorClass = 'auth-error-box';
     let errorMessage = '';
     if (usernameTooShort || usernameTooLong || usernameTaken || passwordTooShort) {
@@ -100,7 +99,7 @@ export default class SignUp extends React.Component {
         <div className="row my-5">
           <div className="col text-center">
             <label htmlFor="username">
-              <h1 className="auth-title">SIGN UP</h1>
+              <h1 className="auth-title">Sign Up</h1>
             </label>
           </div>
         </div>
@@ -111,7 +110,6 @@ export default class SignUp extends React.Component {
 
         <div className="row">
           <div className="col auth-field">
-            <img src="images/user-icon.svg" className="p-1" />
             <input
               required
               autoFocus
@@ -126,7 +124,6 @@ export default class SignUp extends React.Component {
         </div>
         <div className="row pt-1">
           <div className="col auth-field">
-            <img src="images/password-icon.svg" className="p-1" />
             <input
               required
               type={passwordType}
@@ -136,7 +133,6 @@ export default class SignUp extends React.Component {
               value={password}
               className="auth-input"
               onChange={handleChange} />
-            <img src={toggle} className="p-1 cursor-pointer" onClick={togglePassword} />
           </div>
         </div>
 
@@ -146,13 +142,6 @@ export default class SignUp extends React.Component {
           </div>
         </div>
 
-        <div className="row">
-          <div className="col">
-            <p className="font-14 text-center">
-              Already have an account? <a href="#sign-in" className="auth-switch-anchor sign-in">LOG IN</a>
-            </p>
-          </div>
-        </div>
       </form>
     );
   }
