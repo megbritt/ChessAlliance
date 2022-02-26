@@ -166,7 +166,7 @@ a:hover {
 }
 
 .auth-btn.sign-up:hover {
-  background-color: #1a1c20;
+  background-color: #be8647;
 }
 
 .auth-btn.sign-in {
@@ -184,10 +184,11 @@ a:hover {
 }
 
 .auth-title {
-  color: #32363c;
-  font-size: 36px;
-  font-weight: normal;
+  color: #694a2d;
+  font-size: 48px;
+  font-weight: 600;
   text-align: center;
+  font-family: 'Cormorant SC', sans-serif;
 }
 
 .auth-error-box {
@@ -196,7 +197,7 @@ a:hover {
   left: 0;
   width: 100%;
   height: calc(136px + 0.25rem);
-  border: 3px solid #e45252;
+  border: 3px solid #fff;
   pointer-events: none;
 }
 
@@ -208,45 +209,53 @@ a:hover {
   position: absolute;
   top: -1.5rem;
   left: 0.5rem;
-  color: #e45252;
+  color: #fff;
   font-size: 14px;
 }
 
 .auth-field {
-  background-color: #4e545e;
+  background-color: #000;
   height: 68px;
   display: flex;
   align-items: center;
+  padding-left: 20px;
+  margin-bottom: 15px;
+  border-radius: 18px;
 }
 
 .auth-input {
-  background-color: #4e545e;
-  color: #eaecee;
+  background-color: #0000;
+  color: #956a43;
   border: none;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 350;
-  width: 250px;
+  width: 450px;
+}
+
+.auth-input:focus {
+  outline: none;
 }
 
 .auth-input::placeholder {
-  color: #b5b5b5;
+  color: #956a43;
 }
 
 .auth-submit-btn {
-  color: #eaecee;
+  color: #956a43;
   width: 100%;
   height: 48px;
-  border-radius: 0;
+  border-radius: 15px;
   font-size: 18px;
   transition: background-color 0.125s ease;
 }
 
 .auth-submit-btn.sign-up {
-  background-color: #be8647c2;
+  background-color: #3e201a;
+  font-family: 'Cormorant SC', sans-serif;
 }
 
 .auth-submit-btn.sign-up:hover {
-  background-color: #be8647;
+  background-color: rgb(68, 20, 20);
 }
 
 .auth-submit-btn.sign-in {
