@@ -10,6 +10,7 @@ import GlobalContext from './lib/global-context';
 import decodeToken from './lib/decode-token';
 import SignUp from './pages/sign-up';
 import SignIn from './pages/sign-in';
+import Local from './pages/local';
 
 export default class App extends React.Component {
   constructor(props) {
@@ -61,6 +62,8 @@ export default class App extends React.Component {
     switch (this.state.route.path) {
       case 'home':
         return <Home />;
+      case 'local':
+        return <Local />;
       case 'join':
         return <JoinGame />;
       case 'post':
