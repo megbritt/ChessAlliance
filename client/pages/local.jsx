@@ -2,7 +2,7 @@ import React from 'react';
 import ReactBoard from '../components/board';
 import PlayerPalette from '../components/player-palette';
 import Banner from '../components/banner';
-import PostGame from '../components/post-game';
+import LocalPostGame from '../components/local-post-game';
 import PostGameContext from '../lib/post-game-context';
 import Board from '../lib/board';
 import GameState from '../lib/gamestate';
@@ -261,7 +261,7 @@ export default class Local extends React.Component {
     return (
       <PostGameContext.Provider value={postGameContext} >
         <div className="game page-height mx-auto">
-          <PostGame closePostGame={this.closePostGame} media="small" />
+          <LocalPostGame closePostGame={this.closePostGame} media="small" />
 
           <div className="w-100 d-block d-sm-none p-2">
             <PlayerPalette player={opponent} promote={brownPromote} dead={brownDead} />
@@ -279,7 +279,7 @@ export default class Local extends React.Component {
             </div>
 
             <div className="col-auto d-none d-sm-block">
-              <PostGame closePostGame={closePostGame} media="large" />
+              <LocalPostGame closePostGame={closePostGame} media="large" />
               <div className="w-100 p-2">
                 <PlayerPalette player={opponent} promote={brownPromote} dead={brownDead} />
               </div>
