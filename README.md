@@ -42,6 +42,7 @@ Try the application at https://chess-alliance.herokuapp.com/
 
 - Node.js 10 or higher
 - NPM 6 or higher
+- PostgreSQL
 
 ### Getting Started
 
