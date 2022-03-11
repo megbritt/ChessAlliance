@@ -67,13 +67,29 @@ Try the application at https://chess-alliance.herokuapp.com/
 
 4. Change the `TOKEN_SECRET` and `DATABASE_URL` to secure, appropriate values in the `.env` file.
 
-5. Run command `sudo service postgresql status` to see if postgresql is running.
+5. Check to see if postgresql is running.
 
-6. If postgresql is not running, run the commant `sudo service postgresql start`
+    ```shell
+    sudo service postgresql status
+    ```
 
-7. Run command `createdb chessAlliance` to initialize the database.
+6. If postgresql is not running, run its start command.
 
-8. Run command `npm run db:import` to import the schema.
+    ```shell
+    sudo service postgresql start
+    ```
+
+7. Initialize the database.
+
+    ```shell
+    createdb chessAlliance
+    ```
+
+8. Import the schema and initial data.
+
+    ```shell
+    npm run db:import
+    ```
 
 9. Start the project. Once started, you can view the application by opening http://localhost:3000 in your browser.
 
