@@ -75,7 +75,7 @@ Try the application at https://chess-alliance.herokuapp.com/
 
 8. Run command `npm run db:import` to import the schema.
 
-9. Start the project. Once started, you can view the application by opening http://localhost:3000 is your browser.
+9. Start the project. Once started, you can view the application by opening http://localhost:3000 in your browser.
 
     ```shell
     npm run dev
